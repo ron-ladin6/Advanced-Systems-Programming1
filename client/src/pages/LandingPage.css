@@ -1,0 +1,65 @@
+/* basic container settings with padding and center text */
+.landing-container {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-primary);
+}
+/* hero section styles with fade-in animation */
+.hero-section {
+  margin-bottom: 60px;
+  animation: fadeIn 1s ease-in;
+}
+/* main title font size and color */
+.hero-section h1 {
+  font-size: 3rem;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+/* subtitle styling */
+.hero-title-sub {
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto 30px auto;
+}
+/* flex container to center the buttons */
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+/* team section header margin */
+.team-section h2 {
+  margin-bottom: 30px;
+  color: var(--text-primary);
+}
+/* grid layout for team cards */
+.team-grid {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+/* styling for the team member card */
+.team-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--input-border);
+  padding: 25px;
+  text-align: left;
+  line-height: 1.6;
+  border-radius: 12px;
+  width: 250px;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+  color: #555;
+}
+/* center the card title */
+.team-card h3 {
+  text-align: center;
+  color: var(--text-primary);
+  margin-top: 0;
+}
+/* text color inside the card */
+.team-card p {
+  color: var(--text-secondary);
+}

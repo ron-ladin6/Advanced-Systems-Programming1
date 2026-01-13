@@ -1,0 +1,47 @@
+.side-menu-container {
+  width: 220px;
+  border-right: 1px solid var(--input-border, #ddd);
+  background: var(--card-bg, #f8f9fa);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: calc(100vh - 64px);
+  height: auto;
+}
+.menu-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: #333;
+  color: var(--text-primary, #333);
+  text-decoration: none;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hover Effect */
+.menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.menu-item.active {
+  background: #eef2ff;
+  background: var(--bg-color, #eef2ff);
+  border: 1px solid #c7d2fe;
+  border: 1px solid var(--input-border, #c7d2fe);
+  color: #3730a3;
+  font-weight: 500;
+}
+
+.menu-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  padding-left: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}

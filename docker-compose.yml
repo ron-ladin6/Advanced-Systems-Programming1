@@ -1,0 +1,50 @@
+services:
+  ex2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ex2
+    ports:
+      - "8080:8080"
+    environment:
+      - JWT_SECRET=dev-secret
+      - FILES_BASE_PATH=/usr/src/my_project/storage
+
+    volumes:
+      - storage_data:/usr/src/my_project/storage
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: web
+    ports:
+      - "5000:5000"
+    depends_on:
+      - ex2
+    environment:
+      - TCP_HOST=ex2
+      - TCP_PORT=8080
+      - PORT=5000
+
+    volumes:
+      - ./node:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  storage_data:

@@ -1,0 +1,48 @@
+.app-shell {
+  /* main wrapper for the application, takes full height */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.app-body {
+  /* container for sidebar and content, minus header height */
+  display: flex;
+  background: var(--card-bg, #f8f9fa);
+  flex: 1;
+  min-height: calc(100vh - 64px);
+  align-items: stretch;
+}
+.app-content {
+  /* main content area that scrolls independently */
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  height: calc(100vh - 64px);
+}
+.watermark-container {
+  /* fixed overlay for watermark, centered and non-interactive */
+  position: fixed;
+  top: 50%;
+  left: 55%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+.watermark-img {
+  /* style the watermark image to be faint and grayscale */
+  width: 450px;
+  max-width: 80%;
+  height: auto;
+  opacity: 0.06;
+  filter: grayscale(100%);
+}
+.content-area {
+  /* ensure background is transparent */
+  background-color: transparent !important;
+}

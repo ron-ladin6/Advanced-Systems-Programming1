@@ -1,0 +1,160 @@
+:root {
+  /* define global color variables for consistent theming */
+  --primary-color: #007bff;
+  --bg-color: #f8f9fa;
+  --text-dark: #333;
+  --text-light: #666;
+  --border-color: #ddd;
+}
+.home-container {
+  /* main page container, takes full viewport height */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: var(--bg-color);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+.main-layout {
+  /*flexible layout wrapper to hold sidebar and content */
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+.content-area {
+  /*area where files are listed, scrollable vertically */
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.toolbar {
+  /*row container for action buttons like new folder/upload */
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+.btn-action {
+  /*base styling for toolbar buttons */
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-new-folder {
+  /*primary blue button for creating folders */
+  background-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+.btn-new-folder:hover {
+  /*darken slightly on hover */
+  background-color: #0069d9;
+}
+.btn-upload {
+  /*secondary white button for file upload */
+  background-color: white;
+  color: var(--text-dark);
+  border: 1px solid var(--border-color);
+}
+.btn-upload:hover {
+  /* light grey background on hover */
+  background-color: #f1f1f1;
+  border-color: #ccc;
+}
+.hidden-input {
+  /* hide the actual file input element but keep it functional */
+  display: none;
+}
+.breadcrumbs {
+  /*navigation path display styling */
+  margin-bottom: 25px;
+  font-size: 1.1rem;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+}
+.crumb-item {
+  /* interactive link in the breadcrumb path */
+  cursor: pointer;
+  color: var(--primary-color);
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.crumb-item:hover {
+  /*show underline on hover */
+  text-decoration: underline;
+  color: #0056b3;
+}
+.crumb-separator {
+  /*visual separator between path items */
+  margin: 0 10px;
+  color: #999;
+}
+.unified-btn {
+  /*generic rounded button style used across the app */
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  height: 36px;
+  margin-right: 5px;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.unified-btn:hover {
+  /*lift button and add shadow on hover */
+  background-color: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+.unified-btn.danger {
+  /*red outlined style for destructive actions like delete */
+  background-color: #fff;
+  color: #d93025;
+  border: 1px solid #d93025;
+}
+.unified-btn.danger:hover {
+  /*fill red on hover */
+  background-color: #d93025;
+  color: white;
+}
+.move-banner {
+  /*floating banner shown when moving files */
+  background-color: var(--card-bg);
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideDown 0.3s ease;
+}
+.move-banner-text {
+  /*styling for text inside the move banner */
+  font-size: 1.1rem;
+  color: var(--primary-color);
+}
+.move-actions {
+  /*container for buttons inside the banner */
+  display: flex;
+  gap: 10px;
+}

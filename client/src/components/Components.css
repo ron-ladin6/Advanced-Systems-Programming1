@@ -1,0 +1,46 @@
+:root {
+  /* Light Mode Colors */
+  --bg-color: #f4f7f6;
+  --card-bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --input-border: #cccccc;
+  --input-bg: #ffffff;
+  --primary-button: #007bff;
+  --error-color: #d93025;
+}
+
+body.dark-mode {
+  /* Dark Mode Colors */
+  --bg-color: #121212;
+  --card-bg: #1e1e1e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #aaaaaa;
+  --input-border: #444444;
+  --input-bg: #2d2d2d;
+  --primary-button: #375a7f;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  margin: 0;
+}
+
+.custom-input {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--input-border);
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.custom-btn {
+  background-color: var(--primary-button);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}

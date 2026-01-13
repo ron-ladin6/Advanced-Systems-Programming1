@@ -1,0 +1,94 @@
+.navbar {
+  /* flex container for header, stick to top of screen */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 30px;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--input-border);
+  position: sticky;
+  top: 0;
+  height: 70px;
+  transition: background-color 0.3s ease;
+}
+.logo-img {
+  /* center the logo wrapper */
+  display: flex;
+  align-items: center;
+}
+.app-logo {
+  /* fix logo height, keep aspect ratio */
+  height: 45px;
+  width: auto;
+  display: block;
+}
+.search-input {
+  /* style the main search bar */
+  width: 400px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  outline: none;
+  border: 1px solid var(--input-border);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+.search-input:focus {
+  /* visual feedback when typing */
+  background-color: var(--card-bg);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+}
+.user-area {
+  /* right side container for user info and actions */
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.user-img {
+  /* round profile picture */
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--input-border);
+}
+.logout {
+  /* red button for logout */
+  background-color: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+.theme-btn {
+  /* circular button for theme toggle */
+  background: transparent;
+  border: 1px solid var(--input-border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  margin-right: 10px;
+}
+.theme-btn:hover {
+  /* grow slightly on hover */
+  background-color: var(--input-border);
+  transform: scale(1.1);
+}
+.theme-icon-img {
+  /* size the sun/moon icon properly */
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
