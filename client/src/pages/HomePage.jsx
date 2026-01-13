@@ -112,6 +112,16 @@ const HomePage = () => {
     if (!trimmed || trimmed === item.name) 
         return;
     setError("");
+    const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(item.name || "");
+    if (isImage) {
+      const oldExt = (item.name.match(/\.(png|jpg|jpeg|gif|webp)$/i) || [])[0];
+      const newExt = (trimmed.match(/\.(png|jpg|jpeg|gif|webp)$/i) || [])[0];
+      //if one is one of images above you can't erase the ending(png/jpg/..)
+      if (!newExt || newExt.toLowerCase() !== oldExt.toLowerCase()) {
+        alert(`Image files must keep the original extension (${oldExt}).`);
+        return;
+      }
+    }
     try {
       //send update request to server
       const res = await fetch(`${API_BASE}/files/${item.id}`, {
@@ -240,7 +250,7 @@ const HomePage = () => {
     }
   };
   return (
-    //main content wrapper
+    //content wrapper
     <div className="content-area">
       {/* display error message box if needed */}
       {error && (

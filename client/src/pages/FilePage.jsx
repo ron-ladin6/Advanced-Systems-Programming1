@@ -93,28 +93,49 @@ const FilePage = () => {
   };
 
   const handleRename = async () => {
-  if (!file) return;
-
+  // sanity: no file loaded
+  if (!file) 
+    return;
   const token = localStorage.getItem("token");
+  // new name from input
   const next = String(editName || "").trim();
-
+  // reset UI messages
   setSuccess("");
   setError("");
-
+  // validate
   if (!next) {
     setError("Name is required.");
     return;
   }
-
   // no change
   if (next === file.name) {
     setSuccess("Name is already up to date.");
     return;
   }
 
+  // if the CURRENT file is an image, block renames that remove/change the extension
+  const imageExtRegex = /\.(png|jpg|jpeg|gif|webp)$/i;
+  const isImageFile = imageExtRegex.test(file.name || "");
+
+  if (isImageFile) {
+    // extract the old extension (including the dot, e.g. ".png")
+    const oldExtMatch = (file.name || "").match(imageExtRegex);
+    const oldExt = oldExtMatch ? oldExtMatch[0] : null;
+
+    // extract the new extension from the new name
+    const newExtMatch = next.match(imageExtRegex);
+    const newExt = newExtMatch ? newExtMatch[0] : null;
+
+    // if user removed the extension OR changed it -> block
+    if (!oldExt || !newExt || newExt.toLowerCase() !== oldExt.toLowerCase()) {
+      setError(`Image files must keep the original extension (${oldExt || "image extension"}).`);
+      return;
+    }
+  }
   setRenaming(true);
+
   try {
-    // Try "name" first, then fallback to "fileName"
+    //try PATCH with name: next
     let res = await fetch(`${API_BASE}/files/${id}`, {
       method: "PATCH",
       headers: {
@@ -124,6 +145,7 @@ const FilePage = () => {
       body: JSON.stringify({ name: next }),
     });
 
+    //fileName: next
     if (!res.ok) {
       res = await fetch(`${API_BASE}/files/${id}`, {
         method: "PATCH",
@@ -135,7 +157,9 @@ const FilePage = () => {
       });
     }
 
+    // handle results
     if (res.ok || res.status === 204) {
+      // update local UI state so user sees the rename immediately
       setFile((prev) => (prev ? { ...prev, name: next } : prev));
       setSuccess("Name updated successfully!");
     } else if (res.status === 409) {
