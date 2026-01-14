@@ -1,3 +1,4 @@
+require("dotenv").config();
 const app = require("./app");
 // Start the server
 const PORT = 5000;

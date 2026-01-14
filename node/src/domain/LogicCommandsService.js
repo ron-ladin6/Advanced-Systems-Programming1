@@ -7,8 +7,7 @@ class LogicCommandsService {
 
   // GET /api/files/shared
   async getSharedFiles(userId) {
-    const allFiles = this.fileStorage.getAllFiles();
-
+    const allFiles = await this.fileStorage.getAllFiles();
     return allFiles.filter((file) => {
       if (file.isDeleted === true) return false;
       if (String(file.ownerId) === String(userId)) return false;
@@ -94,8 +93,8 @@ class LogicCommandsService {
     throw error;
   }
   // verify that user is the owner of the file
-  verifyOwner(fileId, userId) {
-    const file = this.tryGetFile(fileId);
+  async verifyOwner(fileId, userId) {
+    const file = await this.tryGetFile(fileId);
     if (String(file.ownerId) !== String(userId)) {
       this.throwError();
     }
@@ -105,9 +104,8 @@ class LogicCommandsService {
   generateId() {
     return Date.now() + "_" + Math.floor(Math.random() * 10000);
   }
-  // try get file or throw 404
-  tryGetFile(id) {
-    const file = this.fileStorage.getFile(id);
+  async tryGetFile(id) {
+    const file = await this.fileStorage.getFile(id);
     if (!file) {
       this.throwError();
     }
@@ -139,9 +137,8 @@ class LogicCommandsService {
     isTrash = false,
     isRecent = false
   ) {
-    const allFiles = this.fileStorage.getAllFiles();
-
-    // IMPORTANT: My Files should contain only files owned by the user.
+    const allFiles = await this.fileStorage.getAllFiles();
+    //My Files should contain only files owned by the user.
     // Shared files are returned ONLY via getSharedFiles().
     const userFiles = allFiles.filter((file) => {
       const isOwner = String(file.ownerId) === String(userId);
@@ -199,18 +196,19 @@ class LogicCommandsService {
     let file;
     //first try owner access
     try {
-      file = this.verifyOwner(id, userId);
+      // <--- CHANGE: הוספתי await
+      file = await this.verifyOwner(id, userId);
     } catch (err) {
       isHaveAccess = false;
     }
     //if not owner, try permission access
     if (isHaveAccess == false) {
       try {
-        file = this.tryGetFile(id);
+        file = await this.tryGetFile(id);
         isHaveAccess = this._hasPermission(file, userId);
       } catch (err) {}
     }
-
+    if (!file) this.throwError();
     if (file.type !== "file") {
       return { ...file, content: null, image: null };
     }
@@ -234,7 +232,7 @@ class LogicCommandsService {
   // POST /api/files
   async create(user, name, content = "", type = "file", parentId = null) {
     if (parentId) {
-      const parent = this.fileStorage.getFile(parentId);
+      const parent = await this.fileStorage.getFile(parentId);
       if (!parent || parent.type != "folder") {
         this.throwError();
       }
@@ -277,9 +275,7 @@ class LogicCommandsService {
 
   // PATCH /api/files/:id
   async update(id, fields, userId) {
-    // Verify that ONLY the owner can make any changes
-    const file = this.verifyOwner(id, userId);
-
+    const file = await this.verifyOwner(id, userId);
     // Once verified, the owner can do everything:
     file.lastAccessed = new Date().toISOString();
 
@@ -303,36 +299,35 @@ class LogicCommandsService {
       );
       file.size = contentToSave.length;
     }
-    // save changes
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return file;
   }
   // DELETE /api/files/:id
   async delete(id, userId) {
-    const file = this.verifyOwner(id, userId);
+    const file = await this.verifyOwner(id, userId);
     // If it's already in trash -> permanently delete
     if (file.isDeleted === true) {
-        // delete file content from C++ server (only for real files)
-        if (file.type === "file") {
-            await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
-        }
-        // remove metadata from Node storage
-        this.fileStorage.deleteFile(id);
-            return {};
+      // delete file content from C++ server (only for real files)
+      if (file.type === "file") {
+        await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
+      }
+      // remove metadata from Node storage
+      await this.fileStorage.deleteFile(id);
+      return {};
     }
     // First delete -> move to trash
     file.isDeleted = true;
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return {};
   }
   // GET /api/files/:id/permissions
   async getPermissions(fileId, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    const file = await this.verifyOwner(fileId, userId);
     return file.permissions || [];
   }
   // POST /api/files/:id/permissions
   async addPermission(fileId, newPermission, ownerId) {
-    const file = this.verifyOwner(fileId, ownerId);
+    const file = await this.verifyOwner(fileId, ownerId);
     //validate new permission
     const rawTarget = String(newPermission.userId || "").trim(); // username OR id
     const role = String(newPermission.role || "").trim();
@@ -361,12 +356,12 @@ class LogicCommandsService {
       role: role.toLowerCase(),
     };
     file.permissions.push(permission);
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return permission;
   }
   // PATCH /api/files/:fileId/permissions/:pId
   async updatePermission(fileId, pId, updates, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    const file = await this.verifyOwner(fileId, userId);
     //find the permission
     const permIndex = file.permissions.findIndex((p) => p.id === pId);
     if (permIndex === -1) this.throwError("Permission not found", 404);
@@ -375,12 +370,13 @@ class LogicCommandsService {
       ...file.permissions[permIndex],
       ...updates,
     };
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return file.permissions[permIndex];
   }
   // DELETE /api/files/:fileId/permissions/:pId
   async deletePermission(fileId, pId, userId) {
-    const file = this.verifyOwner(fileId, userId);
+    // <--- CHANGE: הוספתי await
+    const file = await this.verifyOwner(fileId, userId);
     //find the permission
     const permissionIndex = file.permissions.findIndex((p) => p.id === pId);
     if (permissionIndex == -1) {
@@ -392,7 +388,7 @@ class LogicCommandsService {
     }
     //remove the permission
     file.permissions.splice(permissionIndex, 1);
-    this.fileStorage.saveFile(file);
+    await this.fileStorage.saveFile(file);
     return {};
   }
   // quick search
@@ -416,7 +412,7 @@ class LogicCommandsService {
       }
     } catch (err) {}
     const lowerQuery = query.toLowerCase();
-    const allFiles = this.fileStorage.getAllFiles();
+    const allFiles = await this.fileStorage.getAllFiles();
     const results = [];
     for (const file of allFiles) {
       const isOwner = String(file.ownerId) === String(userId);

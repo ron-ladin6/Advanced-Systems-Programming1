@@ -1,4 +1,11 @@
 services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   ex2:
     build:
       context: .
@@ -9,7 +16,6 @@ services:
     environment:
       - JWT_SECRET=dev-secret
       - FILES_BASE_PATH=/usr/src/my_project/storage
-
     volumes:
       - storage_data:/usr/src/my_project/storage
 
@@ -22,11 +28,13 @@ services:
       - "5000:5000"
     depends_on:
       - ex2
+      - mongo
     environment:
       - TCP_HOST=ex2
       - TCP_PORT=8080
       - PORT=5000
-
+      - MONGO_URI=mongodb://mongo:27017/my_drive_db
+      - JWT_SECRET=MySuperSecretKeyForProject123!
     volumes:
       - ./node:/app
       - /app/node_modules
@@ -48,3 +56,4 @@ services:
 
 volumes:
   storage_data:
+  mongo_data:

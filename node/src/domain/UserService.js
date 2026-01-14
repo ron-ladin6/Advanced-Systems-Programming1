@@ -23,14 +23,14 @@ class UserService {
     const u = typeof username === "string" ? username.trim() : "";
     const e = typeof email === "string" ? email.trim() : "";
     const d = typeof displayName === "string" ? displayName.trim() : "";
-    const img = typeof profilePictureURL === "string" ? profilePictureURL.trim() : "";
+    const img =
+      typeof profilePictureURL === "string" ? profilePictureURL.trim() : "";
     //if not valid, return null
-    if (!u || !e || !password) 
-        return null;
-    if (typeof verifyPassword !== "string" || password !== verifyPassword) 
-        return null;
+    if (!u || !e || !password) return null;
+    if (typeof verifyPassword !== "string" || password !== verifyPassword)
+      return null;
     //check if user exists
-    const newUser = this.userStore.create({
+    const newUser = await this.userStore.create({
       username: u,
       email: e,
       passwordHash: this._hashPassword(password),
@@ -41,24 +41,20 @@ class UserService {
     return newUser;
   }
   //login user
-   async login(login, password) {
-    if (typeof login !== "string" || typeof password !== "string") 
-        return null;
+  async login(login, password) {
+    if (typeof login !== "string" || typeof password !== "string") return null;
     //delete spaces
     const key = login.trim();
     //if empty
-    if (!key) 
-        return null;
+    if (!key) return null;
     //find user by login
-    const user = this.userStore.findByLogin(key);
+    const user = await this.userStore.findByLogin(key);
     //if not found
-    if (!user) 
-        return null;
+    if (!user) return null;
     //check password
     const inputHash = this._hashPassword(password);
     //if not match
-    if (inputHash !== user.passwordHash) 
-        return null;
+    if (inputHash !== user.passwordHash) return null;
     //return user data
     return {
       id: user.id,
