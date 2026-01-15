@@ -118,7 +118,7 @@ export default function Register() {
           setError("");
           setDisplayName(t);
         }}
-        placeholder="Display Name"
+        placeholder="Display Name(optional)"
         placeholderTextColor={Theme.colors.muted}/>
       <TextInput
         style={styles.input}
@@ -138,7 +138,7 @@ export default function Register() {
           setError("");
           setPassword(t);
         }}
-        placeholder="Password (min 8 chars, letters & numbers)"
+        placeholder="Password"
         placeholderTextColor={Theme.colors.muted}
         secureTextEntry/>
       <TextInput
@@ -154,7 +154,7 @@ export default function Register() {
       />
       {/*image Picker Section */}
       <View style={styles.row}>
-        <MainButton title="Pick Profile Picture" onPress={pickImage} disabled={loading} />
+        <MainButton title="Pick Profile Picture(optional)" onPress={pickImage} disabled={loading} />
       </View>
       {/*preview the selected image */}
       {!!profilePictureURL && (
