@@ -415,7 +415,8 @@ class LogicCommandsService {
     if (!query) {
       return [];
     }
-    const contentMatchIds = new Set();
+    const contentMatchIds = [];
+    //Search content via C++ Gateway
     try {
       const response = await this._handleGatewayRequest(
         this.fileGateway.search(query),
@@ -424,30 +425,18 @@ class LogicCommandsService {
       const content = response.content;
       if (content && content.length > 0) {
         const cleanContent = content.trim();
+        // Assuming C++ server returns IDs separated by spaces
         const ids = cleanContent.split(" ");
-        for (const id of ids) {
-          contentMatchIds.add(id);
-        }
+        contentMatchIds.push(...ids);
       }
-    } catch (err) {}
-    const lowerQuery = query.toLowerCase();
-    const allFiles = await this.fileStorage.getAllFiles();
-    const results = [];
-    for (const file of allFiles) {
-      const isOwner = String(file.ownerId) === String(userId);
-      const hasPermission = await this._hasPermission(file, userId);
-
-      if (!isOwner && !hasPermission) {
-        continue;
-      }
-      const nameMatches = file.name.toLowerCase().includes(lowerQuery);
-      const contentMatches = contentMatchIds.has(file.id);
-      if (nameMatches || contentMatches) {
-        results.push(file);
-      }
+    } catch (err) {
+      console.error("Warning: Content search via Gateway failed.", err);
     }
 
-    return results;
+    //Delegate search logic to DB (MongoDB)
+    // Instead of fetching all files and filtering in JS loop (bad performance),
+    // we send the query + found IDs to the DB to filter efficiently.
+    return await this.fileStorage.searchFiles(userId, query, contentMatchIds);
   }
 }
 //make available for import

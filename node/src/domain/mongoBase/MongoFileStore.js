@@ -54,6 +54,28 @@ class MongoFileStore {
     const files = await FileMetadata.find({ ownerId });
     return files.map((f) => this.docToObj(f));
   }
+  async searchFiles(userId, queryText, contentMatchIds = []) {
+    const foundDocs = await this.FileModel.find({
+      // we need to condition
+      // first we are need to be owner or can permission to the file
+      //the file need do have the query in the content (get from logic command) or the file name has the query.
+      $and: [
+        {
+          $or: [{ ownerId: userId }, { "permissions.userId": userId }],
+        },
+        {
+          $or: [
+            //regex search if the query inside!! the name and not be exactly
+            // "i" mean insensitive find HELLO and Hello and HeLlO
+            { name: { $regex: queryText, $options: "i" } },
+            { _id: { $in: contentMatchIds } },
+          ],
+        },
+      ],
+    });
+
+    return foundDocs.map((doc) => this.docToObj(doc));
+  }
 }
 
 module.exports = MongoFileStore;
