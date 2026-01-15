@@ -1,6 +1,6 @@
 import React from "react";
 import { Pressable, StyleSheet, Text } from "react-native";
-import { Theme } from "../styles/Theme";
+import { Theme } from "../styles/Theme.js";
 
 //it accepts a title, an onPress function, and an optional disabled state.
 export default function MainButton({ title, onPress, disabled = false }) {

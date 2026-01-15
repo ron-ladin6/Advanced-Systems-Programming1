@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
-import MainButton from "../src/components/MainButton";
-import { Theme } from "../src/styles/Theme";
-import { useAuth } from "../src/context/AuthContext";
+import MainButton from "../components/MainButton";
+import { Theme } from "../styles/Theme";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const router = useRouter();

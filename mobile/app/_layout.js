@@ -1,17 +1,30 @@
 import React from "react";
 import { Stack } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../src/context/AuthContext";
+import { AuthProvider, useAuth } from "../context/AuthContext";
 
-//it wraps all screens with necessary providers.
+// this component handles the routing logic
+function MainLayout() {
+  const { token } = useAuth();
+  if (!token) {
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="login" />
+        <Stack.Screen name="register" />
+      </Stack>
+    );
+  }
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(drawer)" />
+    </Stack>
+  );
+}
+
+// root layout just wraps everything with auth provider
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      {/*authProvider makes the login state available to all screens */}
-      <AuthProvider>
-        {/* the Stack navigator handles the transition between screens */}
-        <Stack screenOptions={{ headerShown: false }} />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 }
