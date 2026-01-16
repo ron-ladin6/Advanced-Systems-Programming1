@@ -52,3 +52,5 @@ export const DarkTheme = {
   radius: { m: 12, l: 20, circle: 50 },
   font: { small: 12, body: 16, title: 24, header: 32 },
 };
+
+export const Theme = LightTheme;

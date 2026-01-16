@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
-import { http } from "../src/api/http";
+import { http } from "../api/http";
 
 //create a Context to share authentication state globally
 const AuthContext = createContext(null);

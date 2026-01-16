@@ -1,8 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import MainButton from "../src/components/MainButton";
-import { Theme } from "../src/styles/Theme";
-import { useAuth } from "../src/context/AuthContext";
+import MainButton from "../components/MainButton";
+import { Theme } from "../style/Theme";
+import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
 
 export default function Home() {
