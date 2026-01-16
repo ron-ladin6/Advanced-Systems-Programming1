@@ -5,47 +5,111 @@ import { Theme } from "../style/Theme";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "expo-router";
 
+import TopBar from "../components/TopBar";
+import FileList from "../components/FileList";
+import FloatingButton from "../components/FloatingButton";
+
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { http } from "../src/api/http";
+
 export default function Home() {
   const router = useRouter();
-  //get user info and logout function from context
-  const { user, logout } = useAuth();
-  const onLogout = () => {
-    //clear token and user data
-    logout();
-    //navigate back to login screen
-    router.replace("/login");
+  const { user, token } = useAuth();
+  const { theme } = useTheme();
+
+  const [files, setFiles] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  //Fetch Root Files (No ID needed)
+  const fetchFiles = useCallback(async () => {
+    if (!token) return; //check if we have user token
+
+    setRefreshing(true); //spinner visual for the person who use the app.
+    try {
+      // first we want all the file the have in the root.
+      const endpoint = `/files`;
+      const data = await http.get(endpoint, { token });
+      setFiles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.log("Error fetching root:", error);
+    } finally {
+      setRefreshing(false); //when we finish stop the spinner.
+    }
+  }, [token]); //execute the func only if the token change
+
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
+
+  const handleFilePress = (file) => {
+    // 1. Handle Folders
+    if (file.isFolder || file.type === "folder") {
+      router.push({
+        pathname: "/folder/[id]",
+        params: { id: file.id || file._id, name: file.name },
+      });
+      return;
+    }
+
+    // 2. Identify File Extension
+    const ext = file.name ? file.name.split(".").pop().toLowerCase() : "";
+
+    // Define supported formats
+    const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
+    const textExtensions = ["txt"];
+
+    const isImage = imageExtensions.includes(ext);
+    const isText = textExtensions.includes(ext); // Now this exists!
+
+    // 3. Handle Supported Files -> Navigate to Internal Viewer (Black Box)
+    if (isImage || isText) {
+      router.push({
+        pathname: "/file/[id]",
+        params: {
+          id: file.id || file._id,
+          name: file.name,
+          type: isImage ? "image" : "text",
+        },
+      });
+    }
+    //Handle Unsupported Files
+    else {
+      Alert.alert(
+        "Not Supported",
+        "We currently only support Image and Text files."
+      );
+    }
   };
+  const handleAddPress = () => {
+    Alert.alert("Create", "Upload / New Folder coming soon...");
+  };
+
   return (
-    <View style={styles.root}>
-      <Text style={styles.title}>Home</Text>
-      {/*display dynamic user name */}
-      <Text style={styles.txt}>
-        {user?.displayName ? `Hello, ${user.displayName}!` : "Hello!"}
-      </Text>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: theme.colors.bg }]}
+      edges={["top"]}
+    >
+      <TopBar
+        title="My Drive"
+        isSearchMode={true} // Only Home has search
+        onBack={() => {}} // No back action on Home
+        profileImage={user?.image || user?.profilePictureURL}
+      />
 
-      <View style={{ height: Theme.spacing.l }} />
+      <FileList
+        files={files}
+        onFilePress={handleFilePress} // Uses the new router.push logic
+        onFileMenu={() => {}}
+        refreshing={refreshing}
+        onRefresh={fetchFiles}
+      />
 
-      <MainButton title="Logout" onPress={onLogout} />
-    </View>
+      <FloatingButton onPress={handleAddPress} />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Theme.colors.bg,
-    padding: Theme.spacing.l,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    fontSize: Theme.font.title,
-    fontWeight: "700",
-    color: Theme.colors.text,
-  },
-  txt: {
-    fontSize: Theme.font.body,
-    color: Theme.colors.muted,
-    marginTop: Theme.spacing.s,
-  },
+  container: { flex: 1 },
 });
