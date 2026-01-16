@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
       });
       //handle different token field names
       const nextToken = data?.token || data?.accessToken || "";
+      setToken(nextToken);
       const nextUser =
         data?.user ||
         (data?.userId
@@ -39,8 +40,6 @@ export function AuthProvider({ children }) {
               image: data.image,
             }
           : null);
-
-      setUser(nextUser);
       //if the server returned the user object, save it.
       //otherwise, if we got a userId, fetch the user details separately.
       if (nextUser) {

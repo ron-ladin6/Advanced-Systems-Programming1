@@ -56,7 +56,8 @@ export default function Register() {
     }
     //check password validity
     if (!password) {
-      return "you must enter a password";
+      setError("You must enter a password");
+      return;
     }
     if (password.length > 0 && password.length < 8) {
       setError("password must be at least 8 characters");
