@@ -17,7 +17,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
-import { API_URL } from "../../api/config";
+import { API_BASE } from "../../api/config";
 
 export default function FileViewer() {
   /*Hooks & Configuration
@@ -28,7 +28,7 @@ export default function FileViewer() {
   const { id, name, type, canEdit } = useLocalSearchParams();
   const { token } = useAuth();
   const { theme } = useTheme();
-  const isEditable = canEdit === "true";
+  const isEditable = canEdit == null ? true : canEdit === "true";
 
   /* State Management
      content: Stores the text of a .txt file.
@@ -67,7 +67,7 @@ export default function FileViewer() {
 
         if (type === "image") {
           // Construct URL for the <Image> component
-          const url = `${API_URL}/api/files/${id}/content`;
+          const url = `${API_BASE}/files/${id}/content`;
           if (isMounted.current) {
             setImageUrl(url);
             setLoading(false);
@@ -180,14 +180,24 @@ export default function FileViewer() {
           - Text Input is locked (editable=false) if permission is denied. */}
       <View style={styles.contentContainer}>
         {type === "image" ? (
-          <Image
-            source={{
-              uri: imageUrl,
-              headers: { Authorization: `Bearer ${token}` },
-            }}
-            style={styles.image}
-            resizeMode="contain"
-          />
+          !imageUrl ? (
+            <View style={styles.center}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            </View>
+          ) : (
+            <Image
+              source={{
+                uri: imageUrl,
+                headers: { Authorization: `Bearer ${token}` },
+              }}
+              style={styles.image}
+              resizeMode="contain"
+              onError={(e) => {
+                console.log("IMAGE LOAD ERROR:", e?.nativeEvent);
+                Alert.alert("Error", "Failed to load image");
+              }}
+            />
+          )
         ) : (
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : "height"}

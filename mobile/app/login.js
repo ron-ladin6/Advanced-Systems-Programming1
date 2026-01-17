@@ -21,7 +21,8 @@ export default function Login() {
     //attempt to login using the context function
     const ok = await login({ login: loginValue, password });
     //if login was successful, navigate to the home screen, replace so the user can't go back to login with the 'back' button
-    if (ok) router.replace("(tabs)");
+    if (ok) 
+        router.replace("/(tabs)");
   };
 
   return (

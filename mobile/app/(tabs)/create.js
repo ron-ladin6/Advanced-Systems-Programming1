@@ -1,90 +1,78 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { Theme } from "../../style/Theme";
 import MainButton from "../../components/MainButton";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
 
 export default function Create() {
   const router = useRouter();
-  //token to talk to the server
   const { token } = useAuth();
+  const { theme } = useTheme();
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const onCreate = async () => {
-    //validation
     if (!token) {
-        Alert.alert("Error", "Session expired. Please login again.");
-        router.replace("/login");
-        return;
+      Alert.alert("Error", "Session expired. Please login again.");
+      router.replace("/login");
+      return;
     }
+
     const n = (name || "").trim();
     if (!n) {
       Alert.alert("Error", "Name is required");
       return;
     }
 
+    setLoading(true);
     try {
-      // Actual Server Request (Uses your http helper)
-      await http.post(
-        "/files", 
-        { fileName: n, type: "folder", parentId: null }, 
-        { token }
-      );
-
-      //Success & Navigate back
-      Alert.alert("Success", `Created folder: ${n}`);
+      await http.post("/files", { fileName: n, type: "folder", parentId: null }, { token });
       setName("");
-      // Go back to Home to see the new folder
-      router.back();
-
+      // return to home page
+      Alert.alert("Success", `Created folder: ${n}`, [
+        { text: "OK", onPress: () => router.replace("/") },
+      ]);
     } catch (e) {
-      // Simple error handling
       Alert.alert("Error", e?.message || "Failed to create folder");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create New Folder</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.bg }]}>
+      <Text style={[styles.title, { color: theme.colors.text, fontSize: theme.font.title }]}>
+        Create New Folder
+      </Text>
 
       <TextInput
         value={name}
         onChangeText={setName}
         placeholder="Enter folder name..."
-        placeholderTextColor={Theme.colors.muted}
-        style={styles.input}
+        placeholderTextColor={theme.colors.muted}
+        style={[
+          styles.input,
+          {
+            borderColor: theme.colors.border,
+            color: theme.colors.text,
+            backgroundColor: theme.colors.card,
+            borderRadius: theme.radius.m,
+            padding: theme.spacing.m,
+            fontSize: theme.font.body,
+          },
+        ]}
         autoCapitalize="none"
       />
 
-      <MainButton title="Create" onPress={onCreate} />
+      <MainButton title={loading ? "Creating..." : "Create"} onPress={onCreate} disabled={loading} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: Theme.spacing.l,
-    gap: Theme.spacing.m,
-    backgroundColor: Theme.colors.bg,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: Theme.font.title,
-    fontWeight: "700",
-    color: Theme.colors.text,
-    textAlign: "center",
-    marginBottom: Theme.spacing.s,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: Theme.colors.border,
-    borderRadius: Theme.radius.m,
-    padding: Theme.spacing.m,
-    fontSize: Theme.font.body,
-    color: Theme.colors.text,
-    backgroundColor: Theme.colors.card,
-  },
+  container: { flex: 1, justifyContent: "center", gap: 16, padding: 24 },
+  title: { fontWeight: "700", textAlign: "center", marginBottom: 8 },
+  input: { borderWidth: 1 },
 });

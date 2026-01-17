@@ -8,5 +8,6 @@ export default function Index() {
   const { token } = useAuth();
   //if the user has a token, they are logged in -> go to home page.
   //otherwise, send them to the login page.
-  return <Redirect href={token ? "/home" : "/login"} />;
+  return <Redirect href={token ? "/(tabs)/index" : "/login"} />;
+
 }
