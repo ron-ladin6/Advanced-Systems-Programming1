@@ -14,10 +14,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
-import { http } from "../../api/http";
-import { API_URL } from "../../api/config";
+import { http } from "../../src/api/http";
+import { API_URL } from "../../src/config";
 
 export default function FileViewer() {
   /*Hooks & Configuration

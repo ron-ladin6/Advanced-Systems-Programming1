@@ -17,8 +17,6 @@ const TopBar = ({
   onSearch,
   onBack,
   profileImage,
-  onMenuPress,
-  onProfilePress,
 }) => {
   const { theme } = useTheme();
   const { colors, spacing, radius, font } = theme;
@@ -43,7 +41,7 @@ const TopBar = ({
       {/* --- LEFT SECTION --- */}
       {/* if we are on search mode (in the home page) show menu page , esle show button to go back */}
       {isSearchMode ? (
-        <TouchableOpacity style={styles.iconBtn} onPress={onMenuPress}>
+        <TouchableOpacity style={styles.iconBtn}>
           <MaterialIcons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
       ) : (
@@ -78,7 +76,7 @@ const TopBar = ({
       </View>
 
       {/* --- RIGHT SECTION --- */}
-      <TouchableOpacity style={styles.profileBtn} onPress={onProfilePress}>
+      <TouchableOpacity style={styles.profileBtn}>
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatar} />
         ) : (
