@@ -10,6 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
 import { API_BASE } from "../../api/config";
+import ThreeDotsMenu from "../../components/ThreeDotsMenu";
 
 export default function Home() {
   const router = useRouter();
@@ -19,6 +20,8 @@ export default function Home() {
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   //Fetch Logic (Get list of files)
   const fetchFiles = useCallback(async () => {
@@ -46,6 +49,11 @@ export default function Home() {
     }, 300);
     return () => clearTimeout(t);
   }, [searchQuery]);
+
+  const handleFileMenu = (file) => {
+    setSelectedFile(file);
+    setMenuVisible(true);
+  };
 
   // Reload when screen gets focus (e.g. coming back from Create folder)
   useFocusEffect(
@@ -122,7 +130,6 @@ export default function Home() {
     const ext = file.name ? file.name.split(".").pop().toLowerCase() : "";
     const imageExtensions = ["jpg", "jpeg", "png", "gif", "webp"];
     const textExtensions = ["txt"];
-
     const isImage = imageExtensions.includes(ext);
     const isText = textExtensions.includes(ext);
 
@@ -158,7 +165,7 @@ export default function Home() {
       <FileList
         files={files}
         onFilePress={handleFilePress}
-        onFileMenu={() => {}}
+        onFileMenu={handleFileMenu}
         refreshing={refreshing}
         onRefresh={fetchFiles}
       />
@@ -168,6 +175,18 @@ export default function Home() {
         currentFolder={null}
         onPressCreateFolder={() => router.push("/(tabs)/create")}
         onPressUpload={handleUpload}
+      />
+      <ThreeDotsMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        file={selectedFile}
+        onAction={(actionId, file) => {
+          if (actionId === "share") {
+            setSelectedFile(file);
+            setShareVisible(true);
+          }
+        }}
+        isTrashMode={false}
       />
     </SafeAreaView>
   );

@@ -27,7 +27,7 @@ const FileList = ({
   return (
     <FlatList
       data={files} //this is loop that go over all the files
-      keyExtractor={(item) => item.id || item._id} // Unique ID for each item
+      keyExtractor={(item, index) => String(item.id || item._id || index)} // Unique ID for each item
       //How to render a single item?
       renderItem={({ item }) => (
         //use the card component that we create to handle each file separately

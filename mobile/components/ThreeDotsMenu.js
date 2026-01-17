@@ -26,7 +26,9 @@ const ThreeDotsMenu = ({ visible, onClose, file, onAction, isTrashMode }) => {
 
     //ownership check: Am I the owner of this file?
     // (Adjust 'id' or 'username' based on the backend response)
-    const isOwner = file.owner === user?.id || file.owner === user?.username;
+    const me = String(user?.id || user?._id || user?.username || "").trim();
+    const owner = String(file.ownerId || file.owner || "").trim();
+    const isOwner = owner && me && owner === me;
 
     //File is in Trash
     // In Trash, permissions are allow: Restore or Delete Forever only.
