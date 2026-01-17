@@ -17,6 +17,8 @@ const TopBar = ({
   onSearch,
   onBack,
   profileImage,
+  onMenuPress,
+  onProfilePress,
 }) => {
   const { theme } = useTheme();
   const { colors, spacing, radius, font } = theme;
@@ -38,10 +40,9 @@ const TopBar = ({
         },
       ]}
     >
-      {/* --- LEFT SECTION --- */}
       {/* if we are on search mode (in the home page) show menu page , esle show button to go back */}
       {isSearchMode ? (
-        <TouchableOpacity style={styles.iconBtn}>
+        <TouchableOpacity style={styles.iconBtn} onPress={onMenuPress}>
           <MaterialIcons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
       ) : (
@@ -50,7 +51,6 @@ const TopBar = ({
         </TouchableOpacity>
       )}
 
-      {/*CENTER SECTION*/}
       {/* like in real drive the is up and middle thee search bar that we put query and get all the fit files*/}
       <View style={styles.centerContent}>
         {isSearchMode ? (
@@ -75,8 +75,7 @@ const TopBar = ({
         )}
       </View>
 
-      {/* --- RIGHT SECTION --- */}
-      <TouchableOpacity style={styles.profileBtn}>
+      <TouchableOpacity style={styles.profileBtn} onPress={onProfilePress}>
         {profileImage ? (
           <Image source={{ uri: profileImage }} style={styles.avatar} />
         ) : (

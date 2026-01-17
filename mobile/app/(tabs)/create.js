@@ -37,7 +37,7 @@ export default function Create() {
       Alert.alert("Success", `Created folder: ${n}`);
       setName("");
       // Go back to Home to see the new folder
-      router.replace("/(tabs)/index");
+      router.back();
 
     } catch (e) {
       // Simple error handling

@@ -9,14 +9,6 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { http } from "../api/http";
 
-import TopBar from "../components/TopBar";
-import FileList from "../components/FileList";
-import FloatingButton from "../components/FloatingButton";
-
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { http } from "../src/api/http";
-
 export default function Home() {
   const router = useRouter();
   const { user, token } = useAuth();
@@ -46,9 +38,16 @@ export default function Home() {
     fetchFiles();
   }, [fetchFiles]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchFiles();
+    }, [fetchFiles])
+  );
+
   const handleFilePress = (file) => {
     // 1. Handle Folders
     if (file.isFolder || file.type === "folder") {
+      const fileName = file.name || file.fileName || "";
       router.push({
         pathname: "/folder/[id]",
         params: { id: file.id || file._id, name: file.name },
@@ -57,6 +56,7 @@ export default function Home() {
     }
 
     // 2. Identify File Extension
+    const fileName = file.name || file.fileName || "";
     const ext = file.name ? file.name.split(".").pop().toLowerCase() : "";
 
     // Define supported formats
@@ -69,7 +69,7 @@ export default function Home() {
     // 3. Handle Supported Files -> Navigate to Internal Viewer (Black Box)
     if (isImage || isText) {
       router.push({
-        pathname: "/file/[id]",
+        pathname: "/File/[id]",
         params: {
           id: file.id || file._id,
           name: file.name,
@@ -86,7 +86,7 @@ export default function Home() {
     }
   };
   const handleAddPress = () => {
-    Alert.alert("Create", "Upload / New Folder coming soon...");
+    router.push("/(tabs)/create");
   };
 
   return (
@@ -99,8 +99,9 @@ export default function Home() {
         isSearchMode={true} // Only Home has search
         onBack={() => {}} // No back action on Home
         profileImage={user?.image || user?.profilePictureURL}
+        onMenuPress={() => router.push("/(tabs)/create")}
+        onProfilePress={() => router.push("/(tabs)/account")}
       />
-
       <FileList
         files={files}
         onFilePress={handleFilePress} // Uses the new router.push logic
@@ -108,7 +109,6 @@ export default function Home() {
         refreshing={refreshing}
         onRefresh={fetchFiles}
       />
-
       <FloatingButton onPress={handleAddPress} />
     </SafeAreaView>
   );
