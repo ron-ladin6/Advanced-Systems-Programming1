@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,6 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
-import { API_BASE } from "../../api/config";
 
 export default function FileViewer() {
   /*Hooks & Configuration
@@ -36,7 +35,6 @@ export default function FileViewer() {
      UI States: 'loading' (initial fetch), 'saving' (uploading changes), 
        and 'isEditing' (shows the save button) */
   const [content, setContent] = useState("");
-  const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -64,25 +62,10 @@ export default function FileViewer() {
 
       try {
         setLoading(true);
-
-        if (type === "image") {
-          // Construct URL for the <Image> component
-          const url = `${API_BASE}/files/${id}/content`;
-          if (isMounted.current) {
-            setImageUrl(url);
-            setLoading(false);
-          }
-        } else if (type === "text") {
-          // Download text content for the <TextInput>
-          const response = await http.get(`/files/${id}/content`, { token });
-
-          if (isMounted.current) {
-            // Handle different server response formats (JSON object vs Raw string)
-            const textData =
-              typeof response === "object" ? response.content : response;
-            setContent(textData || "");
-            setLoading(false);
-          }
+        const fileData = await http.get(`/files/${id}`, { token });
+        if (isMounted.current) {
+          setContent(fileData.content || "");
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error loading file:", error);
@@ -180,22 +163,15 @@ export default function FileViewer() {
           - Text Input is locked (editable=false) if permission is denied. */}
       <View style={styles.contentContainer}>
         {type === "image" ? (
-          !imageUrl ? (
+          !content ? (
             <View style={styles.center}>
               <ActivityIndicator size="large" color={theme.colors.primary} />
             </View>
           ) : (
             <Image
-              source={{
-                uri: imageUrl,
-                headers: { Authorization: `Bearer ${token}` },
-              }}
+              source={{ uri: content }}
               style={styles.image}
               resizeMode="contain"
-              onError={(e) => {
-                console.log("IMAGE LOAD ERROR:", e?.nativeEvent);
-                Alert.alert("Error", "Failed to load image");
-              }}
             />
           )
         ) : (
