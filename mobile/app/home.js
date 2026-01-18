@@ -13,7 +13,8 @@ import { API_BASE } from "../api/config";
 import ThreeDotsMenu from "../components/ThreeDotsMenu";
 import RenameModal from "../components/RenameModal";
 import SideMenu from "../components/SideMenu";
-
+import ShareModal from "../components/ShareModal";
+import { useFileActions } from "../Hooks/FileFuncs";
 export default function Home() {
   const router = useRouter();
   const { user, token, logout } = useAuth();
@@ -27,7 +28,7 @@ export default function Home() {
   const [renameVisible, setRenameVisible] = useState(false);
   const [renameInitial, setRenameInitial] = useState("");
   const [sideMenuVisible, setSideMenuVisible] = useState(false);
-
+  const [shareVisible, setShareVisible] = useState(false);
   //Fetch Logic (Get list of files)
   const fetchFiles = useCallback(async () => {
     if (!token) return; //check if we have user token
@@ -46,7 +47,7 @@ export default function Home() {
       setRefreshing(false);
     }
   }, [token, debouncedQuery]); //execute the func only if the token change
-
+  const { handleShare } = useFileActions(token, fetchFiles, null);
   // Initial load
   useEffect(() => {
     const t = setTimeout(() => {
@@ -113,11 +114,8 @@ export default function Home() {
       }
 
       if (actionId === "share") {
-        const fileId = file?.id || file?._id;
-        router.push({
-          pathname: "/share/[id]",
-          params: { id: fileId, name: file?.name || "File" },
-        });
+        setMenuVisible(false);
+        setShareVisible(true);
         return;
       }
     } catch (e) {
@@ -301,6 +299,13 @@ export default function Home() {
             router.replace("/login");
           }
         }}
+      />
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        onSubmit={(username) =>
+          handleShare(selectedFile?.id || selectedFile?._id, username)
+        }
       />
     </SafeAreaView>
   );
