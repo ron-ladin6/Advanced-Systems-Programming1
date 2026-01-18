@@ -32,7 +32,7 @@ export default function Create() {
       setName("");
       // return to home page
       Alert.alert("Success", `Created folder: ${n}`, [
-        { text: "OK", onPress: () => router.replace("/") },
+        { text: "OK", onPress: () => router.replace("/(tabs)") },
       ]);
     } catch (e) {
       Alert.alert("Error", e?.message || "Failed to create folder");

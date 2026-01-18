@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { http } from "../api/http";
 import { openFileOrFolder } from "../utils/openFile";
+import SideMenu from "./SideMenu";
 
 //reusable screen component to avoid code duplication
 export default function GenericFileScreen({
@@ -17,9 +18,9 @@ export default function GenericFileScreen({
   buildMenuActions, // (file, ctx) => Alert buttons array
 }) {
   const router = useRouter();
-  const { token, logout } = useAuth();
+  const { token, logout, user } = useAuth();
   const { theme } = useTheme();
-
+  const [sideMenuVisible, setSideMenuVisible] = useState(false)
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -81,15 +82,35 @@ export default function GenericFileScreen({
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
-      edges={["top"]}
+      edges={[]}
     >
-      <TopBar title={title} isSearchMode={false} onBack={() => router.back()} />
+      <TopBar
+        title={title}
+        isSearchMode={false}
+        showMenu={true}
+        onMenuPress={() => setSideMenuVisible(true)}
+        profileImage={user?.image || user?.profilePictureURL}
+        onProfilePress={() => router.push("/(tabs)/account")}
+      />
       <FileList
         files={files}
         onFilePress={handleFilePress}
         onFileMenu={handleMenu}
         refreshing={refreshing}
         onRefresh={fetchFiles}
+      />
+      <SideMenu
+        visible={sideMenuVisible}
+        onClose={() => setSideMenuVisible(false)}
+        active={String(queryParam || "")}
+        onNavigate={(route) => router.replace(route)}
+        onLogout={() => {
+          try {
+            logout();
+          } finally {
+            router.replace("/login");
+          }
+        }}
       />
     </SafeAreaView>
   );

@@ -8,7 +8,8 @@ export default function TabsLayout() {
   const { token } = useAuth();
   const { theme } = useTheme();
 
-  if (!token) return <Redirect href="/login" />;
+  if (!token) 
+      return <Redirect href="/login" />;
 
   return (
     <Tabs
@@ -33,12 +34,12 @@ export default function TabsLayout() {
       />
 
       <Tabs.Screen
-        name="create"
+        name="starred"
         options={{
-          title: "Create",
+          title: "Starred",
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name={focused ? "add-circle" : "add-circle-outline"}
+              name={focused ? "star" : "star-outline"}
               size={size}
               color={color}
             />
@@ -54,7 +55,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-
+      <Tabs.Screen name="create" options={{ href: null }} />
       <Tabs.Screen
         name="account"
         options={{

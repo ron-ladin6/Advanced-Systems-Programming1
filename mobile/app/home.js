@@ -12,10 +12,11 @@ import { http } from "../api/http";
 import { API_BASE } from "../api/config";
 import ThreeDotsMenu from "../components/ThreeDotsMenu";
 import RenameModal from "../components/RenameModal";
+import SideMenu from "../components/SideMenu";
 
 export default function Home() {
   const router = useRouter();
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -25,6 +26,7 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [renameVisible, setRenameVisible] = useState(false);
   const [renameInitial, setRenameInitial] = useState("");
+  const [sideMenuVisible, setSideMenuVisible] = useState(false);
 
   //Fetch Logic (Get list of files)
   const fetchFiles = useCallback(async () => {
@@ -206,15 +208,16 @@ export default function Home() {
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
-      edges={["top"]}
+      edges={[]}
     >
       <TopBar
         title="My Drive"
         isSearchMode={true} // Only Home has search
+        showMenu={true}
         onSearch={setSearchQuery}
         onBack={() => {}} // No back action on Home
         profileImage={user?.image || user?.profilePictureURL}
-        onMenuPress={() => router.push("/(tabs)/create")}
+        onMenuPress={() => setSideMenuVisible(true)}
         onProfilePress={() => router.push("/(tabs)/account")}
       />
 
@@ -269,6 +272,19 @@ export default function Home() {
         file={selectedFile}
         onAction={onMenuAction}
         isTrashMode={false}
+      />
+      <SideMenu
+        visible={sideMenuVisible}
+        onClose={() => setSideMenuVisible(false)}
+        active="home"
+        onNavigate={(route) => router.replace(route)}
+        onLogout={() => {
+          try {
+            logout();
+          } finally {
+            router.replace("/login");
+          }
+        }}
       />
     </SafeAreaView>
   );

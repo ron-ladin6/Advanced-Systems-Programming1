@@ -18,6 +18,7 @@ const TopBar = ({
   onBack,
   profileImage,
   onMenuPress,
+  showMenu = false,
   onProfilePress, 
 }) => {
   const { theme } = useTheme();
@@ -41,7 +42,7 @@ const TopBar = ({
       ]}
     >
       {/* if we are on search mode (in the home page) show menu page , esle show button to go back */}
-      {isSearchMode ? (
+      {(showMenu || isSearchMode) ? (
         <TouchableOpacity style={styles.iconBtn} onPress={onMenuPress}>
           <MaterialIcons name="menu" size={24} color={colors.text} />
         </TouchableOpacity>
