@@ -30,14 +30,14 @@ export default function Home() {
 
   //Fetch Logic (Get list of files)
   const fetchFiles = useCallback(async () => {
-    if (!token) 
-        return; //check if we have user token
+    if (!token) return; //check if we have user token
 
     setRefreshing(true);
     try {
       // first we want all the file the have in the root.
       const endpoint = debouncedQuery
-      ? `/search?q=${encodeURIComponent(debouncedQuery)}` : `/files`;
+        ? `/search?q=${encodeURIComponent(debouncedQuery)}`
+        : `/files`;
       const data = await http.get(endpoint, { token });
       setFiles(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -45,7 +45,7 @@ export default function Home() {
     } finally {
       setRefreshing(false);
     }
-   }, [token, debouncedQuery]); //execute the func only if the token change
+  }, [token, debouncedQuery]); //execute the func only if the token change
 
   // Initial load
   useEffect(() => {
@@ -70,8 +70,7 @@ export default function Home() {
   //function to open rename modal
   const renameFile = (file) => {
     const fileId = file?.id || file?._id;
-    if (!fileId)
-      return;
+    if (!fileId) return;
     //set state for modal
     setSelectedFile(file);
     setRenameInitial(file?.name || "");
@@ -92,7 +91,11 @@ export default function Home() {
       if (actionId === "toggle_star") {
         const nextStar = !file.isStarred;
         //update star status on server
-        await http.patch(`/files/${fileId}`, { isStarred: nextStar }, { token });
+        await http.patch(
+          `/files/${fileId}`,
+          { isStarred: nextStar },
+          { token }
+        );
         await fetchFiles();
         return;
       }
@@ -121,40 +124,54 @@ export default function Home() {
       Alert.alert("Error", e?.message || "Action failed");
     }
   };
+  // Convert Blob to Base64
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        // Returns a string like: "data:image/jpeg;base64,..."
+        resolve(reader.result);
+      };
+      reader.readAsDataURL(blob);
+    });
+  };
 
   const handleUpload = async () => {
     try {
-      //Open System File Picker
-      // We limit selection to Images and Text files only as per requirements
+      //Pick a file from the device
       const result = await DocumentPicker.getDocumentAsync({
         type: ["image/*", "text/*"],
-        copyToCacheDirectory: true, // Important: copies file to a accessible temp location
+        copyToCacheDirectory: true,
       });
-      // User cancelled the picker
-      if (result.canceled) 
-          return;
-      const file = result.assets[0];
-      // Prepare the FormData
-      // This allows us to send binary data + metadata in one request
-      const formData = new FormData();
 
-      // React Native requires this specific object structure for files:
-      formData.append("file", {
-        uri: file.uri, // Path to the file on the phone
-        name: file.name,
-        type: file.mimeType,
-      });
+      if (result.canceled) return;
+      const file = result.assets[0];
+
+      setRefreshing(true);
+
+      //Read local file as Blob and convert to Base64
+      // We use 'fetch' to read the local URI provided by the picker
+      const localResponse = await fetch(file.uri);
+      const blob = await localResponse.blob();
+      const base64Content = await blobToBase64(blob);
+
+      // We send the file content as a string inside the JSON body
+      const payload = {
+        fileName: file.name,
+        type: "file",
+        parentId: null, // Or use the current folder ID if available
+        content: base64Content, // This contains the full Base64 string
+      };
 
       //Send to Node.js Server
-      setRefreshing(true); // Show spinner
-
-      // We use native 'fetch' because we need special headers handling for Multipart
       const response = await fetch(`${API_BASE}/files`, {
         method: "POST",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -162,7 +179,6 @@ export default function Home() {
         throw new Error(errorText || "Upload failed");
       }
 
-      //Refresh the list to show the new file
       Alert.alert("Success", "File uploaded successfully");
       await fetchFiles();
     } catch (err) {
