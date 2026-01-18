@@ -107,7 +107,9 @@ export default function ShareScreen() {
           try {
             setLoading(true);
             //delete permission from server
-            await http.delete(`/files/${fileId}/permissions/${permId}`, { token });
+            await http.delete(`/files/${fileId}/permissions/${permId}`, {
+              token,
+            });
             await fetchPermissions();
           } catch (e) {
             Alert.alert("Error", e?.message || "Failed to remove permission");
@@ -138,10 +140,18 @@ export default function ShareScreen() {
         ]}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ color: colors.text, fontSize: font.body, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: font.body,
+              fontWeight: "700",
+            }}
+          >
             {uid || "Unknown user"}
           </Text>
-          <Text style={{ color: colors.muted, fontSize: font.small, marginTop: 4 }}>
+          <Text
+            style={{ color: colors.muted, fontSize: font.small, marginTop: 4 }}
+          >
             {editable ? "Editor" : "Viewer"}
           </Text>
         </View>
@@ -153,7 +163,13 @@ export default function ShareScreen() {
             { borderColor: colors.border, borderRadius: radius.s },
           ]}
         >
-          <Text style={{ color: colors.danger, fontSize: font.body, fontWeight: "700" }}>
+          <Text
+            style={{
+              color: colors.danger,
+              fontSize: font.body,
+              fontWeight: "700",
+            }}
+          >
             Remove
           </Text>
         </TouchableOpacity>
@@ -162,8 +178,15 @@ export default function ShareScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={["top"]}>
-      <TopBar title={name ? `🤝 Share: ${name}` : "🤝 Share"} isSearchMode={false} onBack={() => router.back()} />
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      edges={["top"]}
+    >
+      <TopBar
+        title={name ? `🤝 Share: ${name}` : "🤝 Share"}
+        isSearchMode={false}
+        onBack={() => router.back()}
+      />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -180,11 +203,23 @@ export default function ShareScreen() {
               },
             ]}
           >
-            <Text style={{ color: colors.text, fontSize: font.body, fontWeight: "800" }}>
+            <Text
+              style={{
+                color: colors.text,
+                fontSize: font.body,
+                fontWeight: "800",
+              }}
+            >
               Add access
             </Text>
 
-            <Text style={{ color: colors.muted, fontSize: font.small, marginTop: 6 }}>
+            <Text
+              style={{
+                color: colors.muted,
+                fontSize: font.small,
+                marginTop: 6,
+              }}
+            >
               Enter the target user's userId
             </Text>
 
@@ -223,13 +258,25 @@ export default function ShareScreen() {
                 },
               ]}
             >
-              <Text style={{ color: "#fff", fontWeight: "800", fontSize: font.body }}>
+              <Text
+                style={{
+                  color: "#fff",
+                  fontWeight: "800",
+                  fontSize: font.body,
+                }}
+              >
                 Share
               </Text>
             </TouchableOpacity>
           </View>
 
-          <Text style={{ color: colors.text, fontSize: font.body, fontWeight: "800" }}>
+          <Text
+            style={{
+              color: colors.text,
+              fontSize: font.body,
+              fontWeight: "800",
+            }}
+          >
             People with access
           </Text>
 
