@@ -166,6 +166,47 @@ export const useFileActions = (token, onRefresh, setLoading) => {
     [token, onRefresh, setLoading]
   );
 
+  const handleShare = useCallback(
+    async (fileId, targetUsername) => {
+      if (!fileId || !targetUsername.trim()) return false;
+
+      try {
+        if (setLoading) setLoading(true);
+
+        // Send request to add permission
+        await http.post(
+          `/files/${fileId}/permissions`,
+          {
+            userId: targetUsername,
+            role: "viewer",
+          },
+          { token }
+        );
+
+        Alert.alert(
+          "Success",
+          `File shared successfully with ${targetUsername}`
+        );
+
+        // Refresh list to reflect changes
+        if (onRefresh) await onRefresh();
+
+        return true; // Indicate success to the caller.
+      } catch (e) {
+        // Provide user-friendly error messages
+        const msg = e.message.includes("404")
+          ? "User not found. Please check the username."
+          : e.message || "Share failed";
+
+        handleError(e, msg);
+        return false;
+      } finally {
+        if (setLoading) setLoading(false);
+      }
+    },
+    [token, onRefresh, setLoading]
+  );
+
   return {
     handleUpload,
     handleCreateFolder,
