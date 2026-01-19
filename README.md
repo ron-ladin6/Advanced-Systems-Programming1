@@ -87,7 +87,7 @@ Make sure to update the API_BASE URL in: mobile/api/config.js (or the relevant c
 
 ## File Actions (Three-Dots Menu)
 -Tap the three dots (⋮) on any item to open the menu:
--Download: Saves the file to your device.
+-Download: Opens the download link in the device browser / system downloader.
 -Rename: Change the file/folder name (extensions are protected).
 -Star: Add/Remove from the "Starred" view.
 -Share: Grant access to another user (enter their username).
