@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Alert, View } from "react-native"; // Added View just in case
+import { StyleSheet, Alert } from "react-native"; // Added View just in case
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import PlusBtnMenu from "../../components/PlusBtnMenu";
@@ -10,7 +10,6 @@ import { useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
-import * as DocumentPicker from "expo-document-picker";
 import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FolderScreen() {

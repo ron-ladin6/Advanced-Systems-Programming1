@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { StyleSheet, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-import * as DocumentPicker from "expo-document-picker";
 import TopBar from "../components/TopBar";
 import FileList from "../components/FileList";
 import PlusBtnMenu from "../components/PlusBtnMenu";
@@ -48,7 +47,7 @@ export default function Home() {
       setRefreshing(false);
     }
   }, [token, debouncedQuery]); //execute the func only if the token change
-  const { handleShare, handleUpload, handleToggleStar, handleDelete } =
+  const { handleShare, handleUpload, handleToggleStar, handleDelete, handleRename } =
   useFileActions(token, fetchFiles, setRefreshing);
   // Initial load
   useEffect(() => {
@@ -171,29 +170,23 @@ export default function Home() {
         initialValue={renameInitial}
         onClose={() => setRenameVisible(false)}
         onSave={async (nextName) => {
-          const fileId = selectedFile?.id || selectedFile?._id;
-
+          const file = selectedFile;
+          const fileId = file?.id || file?._id;
+          if (!fileId) 
+              return;
           const next = String(nextName || "").trim();
-          if (!fileId) return;
           if (!next) {
             Alert.alert("Invalid", "Name is required.");
             return;
           }
           //check if name actually changed
-          if (next === (selectedFile?.name || "")) {
+          if (next === (file?.name || "")) {
             setRenameVisible(false);
             return;
           }
-
-          try {
-            //send patch request to server
-            await http.patch(`/files/${fileId}`, { name: next }, { token });
-            setRenameVisible(false);
-            //refresh file list
-            await fetchFiles();
-          } catch (e) {
-            Alert.alert("Error", e?.message || "Rename failed");
-          }
+          const isFolder = file?.isFolder || file?.type === "folder";
+          await handleRename(fileId, next, file?.name || "", isFolder);
+          setRenameVisible(false);
         }}
       />
 
