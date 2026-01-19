@@ -87,8 +87,7 @@ export default function FileViewer() {
 
     setSaving(true);
     try {
-      await http.put(`/files/${id}/content`, { content }, { token });
-
+      await http.patch(`/files/${id}`, { content }, { token });
       if (isMounted.current) {
         Alert.alert("Success", "File saved successfully");
         setIsEditing(false); // Hide the save button after success
