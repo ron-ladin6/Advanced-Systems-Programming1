@@ -22,6 +22,58 @@ export const useFileActions = (token, onRefresh, setLoading) => {
     });
   };
 
+  const readPickedContent = async (pickedFile) => {
+      const fileName = String(pickedFile?.name || "");
+      //extract extension to determine how to read the file
+      const ext = fileName.split(".").pop().toLowerCase();
+      //define which extensions are treated as plain text
+      const isText = ext === "txt" || ext === "md";
+      if (isText) {
+        //for text files, we fetch the URI and extract the text directly.
+        const res = await fetch(pickedFile.uri);
+        return await res.text();
+      }
+      // For images and other binary files, we convert them to Base64
+      const res = await fetch(pickedFile.uri);
+      //get the binary large object
+      const blob = await res.blob();
+      return await blobToBase64(blob);
+  };
+
+  const handleReplaceContent = useCallback(
+    async (fileId, pickerType) => {
+      if (!fileId) 
+        return;
+      try {
+        //open Device Document Picker
+        const result = await DocumentPicker.getDocumentAsync({
+          type: pickerType,
+          copyToCacheDirectory: true,
+        });
+        if (result.canceled) return;
+        const picked = result.assets[0];
+        //validate the new file name (optional safety check)
+        if (!validateName(picked.name)) return;
+        if (setLoading) setLoading(true);
+        //read the file content (Text or Base64) using the helper function
+        const content = await readPickedContent(picked);
+        //send PATCH request to update ONLY the content
+        await http.patch(`/files/${fileId}`, { content }, { token });
+        Alert.alert("Success", "File updated successfully");
+        //refresh the list to reflect changes
+        if (onRefresh) 
+            await onRefresh();
+        //return content so the calling component can update its state locally
+        return content; 
+      } catch (e) {
+          handleError(e, "Update failed");
+      } finally {
+          if (setLoading) setLoading(false);
+      }
+    },
+    [token, onRefresh, setLoading]
+  );
+
   // Centralized error handling to avoid code duplication.
   const handleError = (e, defaultMsg) => {
     console.error(defaultMsg, e);
@@ -45,23 +97,18 @@ export const useFileActions = (token, onRefresh, setLoading) => {
         if (setLoading) setLoading(true);
 
         //Read the file from the local URI and convert to Base64
-        const localResponse = await fetch(file.uri);
-        const blob = await localResponse.blob();
-        const base64Content = await blobToBase64(blob);
+        const content = await readPickedContent(file);
 
         //Prepare the payload
         const payload = {
           fileName: file.name,
           type: "file",
           parentId: parentId, // If null, uploads to Root. If ID exists, uploads to that folder.
-          content: base64Content,
+          content,
         };
-
         //Send to Server
         await http.post("/files", payload, { token });
-
         Alert.alert("Success", "File uploaded successfully");
-
         //Refresh the list
         if (onRefresh) await onRefresh();
       } catch (err) {
@@ -214,5 +261,6 @@ export const useFileActions = (token, onRefresh, setLoading) => {
     handleToggleStar,
     handleDelete,
     handleShare,
+    handleReplaceContent,
   };
 };

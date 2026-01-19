@@ -19,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { API_BASE } from "../../api/config";
 import { http } from "../../api/http";
+import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FileViewer() {
   /*Hooks & Configuration
@@ -30,7 +31,6 @@ export default function FileViewer() {
   const { token } = useAuth();
   const { theme } = useTheme();
   const isEditable = canEdit == null ? true : canEdit === "true";
-
   /* State Management
      content: Stores the text of a .txt file.
     imageUrl: Stores the full link to the image.
@@ -40,6 +40,8 @@ export default function FileViewer() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { handleReplaceContent } = useFileActions(token, null, setSaving);
+
 
   /* Component Lifecycle Safety (isMounted)
      This prevents the app from crashing if the user leaves the screen 
@@ -67,6 +69,7 @@ export default function FileViewer() {
         const fileData = await http.get(`/files/${id}`, { token });
         if (isMounted.current) {
           setContent(fileData.content || "");
+          setIsEditing(false);
           setLoading(false);
         }
       } catch (error) {
@@ -156,8 +159,22 @@ export default function FileViewer() {
               )}
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={handleDownload}>
-              <MaterialIcons name="download" size={24} color={theme.colors.primary} />
+            <TouchableOpacity
+              onPress={async () => {
+                if (type !== "image") 
+                  return handleDownload();
+                if (!isEditable) 
+                  return handleDownload();
+                const next = await handleReplaceContent(id, ["image/*"]);
+                if (typeof next === "string") 
+                  setContent(next);
+                }
+              }
+              >
+              <MaterialIcons
+                name={type === "image" && isEditable ? "edit" : "download"}
+                size={24}
+                color={theme.colors.primary}/>
             </TouchableOpacity>
           )}
         </View>
