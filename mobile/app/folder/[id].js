@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
 import * as DocumentPicker from "expo-document-picker";
+import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FolderScreen() {
   const router = useRouter();
@@ -43,6 +44,8 @@ export default function FolderScreen() {
     }
   }, [token, id, logout, router]);
 
+  const { handleUpload } = useFileActions(token, fetchFiles, setRefreshing);
+
   // Initial fetch when entering the screen
   useEffect(() => {
     fetchFiles();
@@ -53,50 +56,6 @@ export default function FolderScreen() {
         fetchFiles();
     }, [fetchFiles])
   );
-
-  const blobToBase64 = (blob) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
-
-  const handleUploadInFolder = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "text/*"],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled) return;
-      const file = result.assets[0];
-
-      //read file from local uri and convert to blob
-      const localRes = await fetch(file.uri);
-      const blob = await localRes.blob();
-      //convert blob to base64 string
-      const base64Content = await blobToBase64(blob);
-
-      //post file to server with parent folder id
-      await http.post(
-        "/files",
-        {
-          fileName: file.name,
-          type: "file",
-          parentId: folderId, //make sure folderId is available from params
-          content: base64Content,
-        },
-        { token }
-      );
-
-      Alert.alert("Success", "File uploaded successfully");
-      //refresh the list
-      fetchFiles(); 
-    } catch (e) {
-      Alert.alert("Error", e?.message || "Upload failed");
-    }
-  };
 
   const handleFilePress = (file) => {
     // 1. If it's a folder, navigate deeper (Recursive navigation)
@@ -155,7 +114,7 @@ export default function FolderScreen() {
           params: { parentId: folderId, returnToId: folderId, returnToName: name || "Folder" },
         })
         }
-        onPressUpload={handleUploadInFolder}
+        onPressUpload={() => handleUpload(folderId)}
       />
     </SafeAreaView>
   );

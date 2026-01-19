@@ -19,6 +19,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { API_BASE } from "../../api/config";
 import { http } from "../../api/http";
+import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FileViewer() {
   /*Hooks & Configuration
@@ -30,7 +31,6 @@ export default function FileViewer() {
   const { token } = useAuth();
   const { theme } = useTheme();
   const isEditable = canEdit == null ? true : canEdit === "true";
-
   /* State Management
      content: Stores the text of a .txt file.
     imageUrl: Stores the full link to the image.
@@ -40,6 +40,8 @@ export default function FileViewer() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { handleReplaceContent } = useFileActions(token, null, setSaving);
+
 
   /* Component Lifecycle Safety (isMounted)
      This prevents the app from crashing if the user leaves the screen 
@@ -67,6 +69,7 @@ export default function FileViewer() {
         const fileData = await http.get(`/files/${id}`, { token });
         if (isMounted.current) {
           setContent(fileData.content || "");
+          setIsEditing(false);
           setLoading(false);
         }
       } catch (error) {
@@ -138,27 +141,58 @@ export default function FileViewer() {
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
     >
       <View style={[styles.header, { borderBottomColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
-        <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
-          {name}
-        </Text>
+        <View style={styles.titleWrap}>
+          <Text
+            style={[styles.title, { color: theme.colors.text }]}
+            numberOfLines={1}
+            ellipsizeMode="middle">
+            {String(name || "")}
+          </Text>
+        </View>
 
-        <View style={styles.iconBtn}>
+        <View style={styles.rightActions}>
           {type === "text" && isEditing && isEditable ? (
-            <TouchableOpacity onPress={handleSave} disabled={saving}>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={saving}
+              style={[styles.actionBtn, saving && styles.actionBtnDisabled]}
+            >
               {saving ? (
                 <ActivityIndicator size="small" color={theme.colors.primary} />
               ) : (
-                <MaterialIcons name="save" size={24} color={theme.colors.primary} />
+                <MaterialIcons name="save" size={22} color={theme.colors.primary} />
               )}
+              <Text style={[styles.actionText, { color: theme.colors.primary }]}>Save</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={handleDownload}>
-              <MaterialIcons name="download" size={24} color={theme.colors.primary} />
-            </TouchableOpacity>
+            <>
+              {isEditable && (type === "image" || type === "text") && (
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={async () => {
+                    if (!id) return;
+                    const pickerType = type === "image" ? ["image/*"] : ["text/*"];
+                    const next = await handleReplaceContent(id, pickerType);
+                    if (typeof next === "string") {
+                      setContent(next);
+                      setIsEditing(false);
+                    }
+                  }}
+                >
+                  <MaterialIcons name="swap-horiz" size={22} color={theme.colors.primary} />
+                  <Text style={[styles.actionText, { color: theme.colors.primary }]}>Replace</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.actionBtn} onPress={handleDownload}>
+                <MaterialIcons name="download" size={22} color={theme.colors.primary} />
+                <Text style={[styles.actionText, { color: theme.colors.primary }]}>Download</Text>
+              </TouchableOpacity>
+            </>
           )}
         </View>
       </View>
@@ -224,23 +258,52 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
-    height: 60,
+    height: 64,
     borderBottomWidth: 1,
   },
-  iconBtn: {
-    width: 40,
+  backBtn: {
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
+    borderRadius: 12,
+  },
+  titleWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
+    alignItems: "center",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 16,
+    fontWeight: "700",
     flex: 1,
     textAlign: "center",
+    maxWidth: "90%",
     marginHorizontal: 10,
+  },
+   rightActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionBtn: {
+    width: 74,
+    height: 50,
+    marginLeft: 8,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  actionText: {
+    marginTop: 3,
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  actionBtnDisabled: {
+    opacity: 0.6,
   },
   contentContainer: {
     flex: 1,
