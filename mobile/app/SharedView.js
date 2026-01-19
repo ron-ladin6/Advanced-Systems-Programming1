@@ -1,5 +1,5 @@
 import React from "react";
-import GenericFileScreen from "../../components/GenericFileScreen";
+import GenericFileScreen from "../components/GenericFileScreen";
 
 // View for displaying files shared with the current user.
 // It uses the generic screen but points to the '/files/shared' endpoint.

@@ -213,5 +213,6 @@ export const useFileActions = (token, onRefresh, setLoading) => {
     handleRename,
     handleToggleStar,
     handleDelete,
+    handleShare,
   };
 };

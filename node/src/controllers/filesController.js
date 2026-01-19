@@ -20,7 +20,6 @@ const getFiles = async (req, res, next) => {
       const results = await logicService.search(req.userId, req.query.q);
       return res.status(200).json(results);
     }
-
     const parentId = req.query.parentId === "null" ? null : req.query.parentId;
     const isTrash = req.query.trash === "true";
     const isStarred = req.query.starred === "true";
@@ -36,7 +35,7 @@ const getFiles = async (req, res, next) => {
         parentId,
         isStarred,
         isTrash,
-        isRecent
+        isRecent,
       );
     }
     return res.status(200).json(files);
@@ -64,7 +63,7 @@ const createFile = async (req, res, next) => {
       name,
       body.content || "",
       body.type || "file",
-      body.parentId || null
+      body.parentId || null,
     );
 
     res.set("Location", `/api/files/${file.id}`);

@@ -76,6 +76,53 @@ class MongoFileStore {
 
     return foundDocs.map((doc) => this.docToObj(doc));
   }
+  async getSharedFiles(userId) {
+    const files = await FileMetadata.find({
+      ownerId: { $ne: userId },
+      "permissions.userId": userId,
+      isDeleted: false,
+    });
+    return files.map((f) => this.docToObj(f));
+  }
+  async getFilesByParent(parentId) {
+    // Fetch non-deleted children for a specific folder
+    const docs = await FileMetadata.find({
+      parentId: String(parentId),
+      isDeleted: false,
+    });
+    return docs.map((doc) => this.docToObj(doc));
+  }
+
+  async getFilesByOwner(ownerId, parentId = null) {
+    // Fetch root files (parentId: null) or folder files for the owner
+    const docs = await FileMetadata.find({
+      ownerId: String(ownerId),
+      parentId: parentId,
+      isDeleted: false,
+    });
+    return docs.map((doc) => this.docToObj(doc));
+  }
+
+  async getTrashFiles(userId) {
+    const docs = await FileMetadata.find({ ownerId: userId, isDeleted: true });
+    return docs.map((doc) => this.docToObj(doc));
+  }
+
+  async getStarredFiles(userId) {
+    const docs = await FileMetadata.find({
+      ownerId: userId,
+      isStarred: true,
+      isDeleted: false,
+    });
+    return docs.map((doc) => this.docToObj(doc));
+  }
+
+  async getRecentFiles(userId) {
+    const docs = await FileMetadata.find({ ownerId: userId, isDeleted: false })
+      .sort({ lastAccessed: -1, created: -1 })
+      .limit(20);
+    return docs.map((doc) => this.docToObj(doc));
+  }
 }
 
 module.exports = MongoFileStore;
