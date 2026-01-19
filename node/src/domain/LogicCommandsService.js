@@ -5,20 +5,13 @@ class LogicCommandsService {
     this.userStorage = userStorage;
   }
 
-  // GET /api/files/shared
   async getSharedFiles(userId) {
-    const allFiles = await this.fileStorage.getAllFiles();
-    const result = [];
-    for (const file of allFiles) {
-      if (file.isDeleted === true) continue;
-      if (String(file.ownerId) === String(userId)) continue;
-
-      const hasAccess = await this._hasPermission(file, userId);
-      if (hasAccess) {
-        result.push(file);
-      }
+    try {
+      return await this.fileStorage.getSharedFiles(userId);
+    } catch (err) {
+      console.error("Error fetching shared files:", err);
+      return [];
     }
-    return result;
   }
   //normalize userId (string id or username/email) to id string
   async _normalizeUserId(value) {
@@ -151,7 +144,7 @@ class LogicCommandsService {
     parentId = null,
     isStarred = false,
     isTrash = false,
-    isRecent = false
+    isRecent = false,
   ) {
     const allFiles = await this.fileStorage.getAllFiles();
     //My Files should contain only files owned by the user.
@@ -231,7 +224,7 @@ class LogicCommandsService {
     if (isHaveAccess) {
       const response = await this._handleGatewayRequest(
         this.fileGateway.get(id),
-        "200"
+        "200",
       );
       let content = null;
       let image = null;
@@ -258,7 +251,7 @@ class LogicCommandsService {
     if (type == "file") {
       await this._handleGatewayRequest(
         this.fileGateway.post(fileID, contentToSave),
-        "201"
+        "201",
       );
     }
     // get current timestamp
@@ -310,7 +303,7 @@ class LogicCommandsService {
       await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
       await this._handleGatewayRequest(
         this.fileGateway.post(id, contentToSave),
-        "201"
+        "201",
       );
       file.size = contentToSave.length;
     }
@@ -420,7 +413,7 @@ class LogicCommandsService {
     try {
       const response = await this._handleGatewayRequest(
         this.fileGateway.search(query),
-        "200"
+        "200",
       );
       const content = response.content;
       if (content && content.length > 0) {

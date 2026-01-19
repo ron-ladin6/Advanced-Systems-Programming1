@@ -76,6 +76,14 @@ class MongoFileStore {
 
     return foundDocs.map((doc) => this.docToObj(doc));
   }
+  async getSharedFiles(userId) {
+    const files = await FileMetadata.find({
+      ownerId: { $ne: userId },
+      "permissions.userId": userId,
+      isDeleted: false,
+    });
+    return files.map((f) => this.docToObj(f));
+  }
 }
 
 module.exports = MongoFileStore;
