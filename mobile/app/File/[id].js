@@ -22,20 +22,15 @@ import { http } from "../../api/http";
 import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FileViewer() {
-  /*Hooks & Configuration
-     Initialize navigation, user authentication, and theme.
-     "useLocalSearchParams" retrieves the file ID/Name passed from the Home screen.*/
+  //initialize navigation, user authentication, and theme.
   const router = useRouter();
-  // We added 'canEdit' to the params to check permissions
+  //we added 'canEdit' to the params to check permissions
   const { id, name, type, canEdit } = useLocalSearchParams();
   const { token } = useAuth();
   const { theme } = useTheme();
   const isEditable = canEdit == null ? true : canEdit === "true";
-  /* State Management
-     content: Stores the text of a .txt file.
-    imageUrl: Stores the full link to the image.
-     UI States: 'loading' (initial fetch), 'saving' (uploading changes), 
-       and 'isEditing' (shows the save button) */
+  /* content: Stores the text of a .txt file.
+    imageUrl: Stores the full link to the image. */
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -43,10 +38,8 @@ export default function FileViewer() {
   const { handleReplaceContent } = useFileActions(token, null, setSaving);
 
 
-  /* Component Lifecycle Safety (isMounted)
-     This prevents the app from crashing if the user leaves the screen 
-     before the server responds. We check 'isMounted.current' before 
-     updating any state.*/
+  /* This prevents the app from crashing if the user leaves the screen 
+     before the server responds.*/
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -56,10 +49,8 @@ export default function FileViewer() {
     };
   }, []);
 
-  /* Data Fetching Logic
-     The "Brain" of the component. It runs once when the component mounts.
-      IF IMAGE: We construct the URL directly (no fetch needed).
-      IF TEXT: We perform a GET request to download the text content.*/
+  /*IF IMAGE: We construct the URL directly (no fetch needed).
+    IF TEXT: We perform a GET request to download the text content.*/
   useEffect(() => {
     const fetchFileContent = async () => {
       if (!token || !id) return;
@@ -98,9 +89,7 @@ export default function FileViewer() {
   }
 };
 
-  /* Save Action (Text Only)
-     This function sends the updated text back to the server using a PUT request.
-     It handles the 'saving' spinner and error alerts.*/
+  //It handles the 'saving' spinner and error alerts
   const handleSave = async () => {
     if (!token || !id) return;
 
@@ -109,7 +98,8 @@ export default function FileViewer() {
       await http.patch(`/files/${id}`, { content }, { token });
       if (isMounted.current) {
         Alert.alert("Success", "File saved successfully");
-        setIsEditing(false); // Hide the save button after success
+        //hides the save button after success
+        setIsEditing(false); 
       }
     } catch (error) {
       console.error("Save error:", error);
@@ -121,8 +111,8 @@ export default function FileViewer() {
     }
   };
 
-  /*Loading View
-     Displays a spinner while the initial data is being fetched.*/
+  
+  //Displays a spinner while the initial data is being fetched
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.bg }]}>
@@ -131,11 +121,7 @@ export default function FileViewer() {
     );
   }
 
-  /* Header
-     Displays the Top Bar with:
-     1. Back Button
-     2. File Name (Title)
-     3. Save Button (Conditional: only shows if text was edited AND user is owner)*/
+  //Displays the Top Bar with Back Button, file name and save button
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.bg }]}
@@ -196,12 +182,6 @@ export default function FileViewer() {
           )}
         </View>
       </View>
-
-      {/* Content Area
-          Dynamically renders either an Image Viewer or a Text Editor.
-          - Images include Authorization headers.
-          - Text Input is wrapped in KeyboardAvoidingView for iOS support. 
-          - Text Input is locked (editable=false) if permission is denied. */}
       <View style={styles.contentContainer}>
         {type === "image" ? (
           !content ? (
@@ -226,7 +206,7 @@ export default function FileViewer() {
                 styles.textArea,
                 {
                   color: theme.colors.text,
-                  // Visual cue: Change background if read-only
+                  //Change background if read-only
                   backgroundColor: isEditable
                     ? theme.colors.surface
                     : theme.colors.bg,
@@ -239,7 +219,8 @@ export default function FileViewer() {
               editable={isEditable}
               onChangeText={(text) => {
                 setContent(text);
-                setIsEditing(true); // Enable save button on user input
+                // Enable save button on user input
+                setIsEditing(true);
               }}
               // Dynamic placeholder based on permission
               placeholder={isEditable ? "Start typing..." : "Read only view"}

@@ -49,7 +49,7 @@ export default function Home() {
   }, [token, debouncedQuery]); //execute the func only if the token change
   const { handleShare, handleUpload, handleToggleStar, handleDelete, handleRename } =
   useFileActions(token, fetchFiles, setRefreshing);
-  // Initial load
+  //initial load
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedQuery(String(searchQuery || "").trim());
@@ -62,7 +62,7 @@ export default function Home() {
     setMenuVisible(true);
   };
 
-  // Reload when screen gets focus (e.g. coming back from Create folder)
+  //reload when screen gets focus (e.g. coming back from Create folder)
   useFocusEffect(
     useCallback(() => {
       fetchFiles();
