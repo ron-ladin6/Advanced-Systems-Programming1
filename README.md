@@ -104,10 +104,18 @@ Make sure to update the API_BASE URL in: mobile/api/config.js (or the relevant c
 
 ### How it should look:
 #### 1:
-![example1](screenshots/example1.png)
+![MyDrivePage](screenshots/MyDrivePage.jpeg)
 #### 2:
-![example2](screenshots/example2.png)
+![PhotoReplaceDownload](screenshots/PhotoReplaceDownload.jpeg)
 #### 3:
-![example3](screenshots/example3.png)
+![Search](screenshots/Search.jpeg)
 #### 4:
+![DeleteRestoreTrash](screenshots/DeleteRestoreTrash.jpeg)
+#### 5:
+![example1](screenshots/example1.png)
+#### 6:
+![example2](screenshots/example2.png)
+#### 7:
+![example3](screenshots/example3.png)
+#### 8:
 ![example4](screenshots/example4.png)
