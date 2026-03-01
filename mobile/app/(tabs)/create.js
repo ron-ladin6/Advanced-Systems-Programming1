@@ -37,7 +37,19 @@ export default function Create() {
       setName("");
       // return to home page
       Alert.alert("Success", `Created folder: ${n}`, [
-        { text: "OK", onPress: () => router.back() },
+        { 
+          text: "OK", 
+          onPress: () => {
+            if (params?.returnToId) {
+              router.replace({
+                pathname: "/folder/[id]",
+                params: { id: String(params.returnToId), name: String(params.returnToName || "Folder") },
+              });
+            } else {
+              router.back();
+            }
+          } 
+        },
       ]);
     } catch (e) {
       Alert.alert("Error", e?.message || "Failed to create folder");

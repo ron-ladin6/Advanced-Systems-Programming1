@@ -5,25 +5,19 @@ class LogicCommandsService {
     this.userStorage = userStorage;
   }
 
-  // GET /api/files/shared
   async getSharedFiles(userId) {
-    const allFiles = await this.fileStorage.getAllFiles();
-    const result = [];
-    for (const file of allFiles) {
-      if (file.isDeleted === true) continue;
-      if (String(file.ownerId) === String(userId)) continue;
-
-      const hasAccess = await this._hasPermission(file, userId);
-      if (hasAccess) {
-        result.push(file);
-      }
+    try {
+      return await this.fileStorage.getSharedFiles(userId);
+    } catch (err) {
+      console.error("Error fetching shared files:", err);
+      return [];
     }
-    return result;
   }
   //normalize userId (string id or username/email) to id string
   async _normalizeUserId(value) {
     const key = String(value || "").trim();
     if (!key) return null;
+    if (/^[0-9a-fA-F]{24}$/.test(key)) return key;
     if (/^\d+$/.test(key)) return key;
     // otherwise try resolve via userStorage
     const resolved = await this._resolveUserId(key);
@@ -33,12 +27,21 @@ class LogicCommandsService {
   async _hasPermission(file, userId) {
     const me = await this._normalizeUserId(userId);
     if (!me) return false;
-    //owner always has access
-    if (!Array.isArray(file.permissions)) return false;
-    //check if any permission matches
-    for (const p of file.permissions) {
-      const other = await this._normalizeUserId(p.userId);
-      if (other && other === me) return true;
+
+    if (Array.isArray(file.permissions)) {
+      const hasDirectAccess = file.permissions.some((p) => {
+        return String(p.userId) === String(me);
+      });
+      if (hasDirectAccess) return true;
+    }
+
+    // Recursive check for parent folder permissions (Inheritance)
+    if (file.parentId) {
+      const parent = await this.fileStorage.getFile(file.parentId);
+      if (parent) {
+        if (String(parent.ownerId) === String(me)) return true;
+        return await this._hasPermission(parent, userId);
+      }
     }
     return false;
   }
@@ -151,33 +154,55 @@ class LogicCommandsService {
     parentId = null,
     isStarred = false,
     isTrash = false,
-    isRecent = false
+    isRecent = false,
   ) {
     const allFiles = await this.fileStorage.getAllFiles();
-    //My Files should contain only files owned by the user.
-    // Shared files are returned ONLY via getSharedFiles().
-    const userFiles = allFiles.filter((file) => {
-      const isOwner = String(file.ownerId) === String(userId);
-      return isOwner;
-    });
+
+    // CASE: Opening a specific folder
+    if (parentId) {
+      const parentFolder = allFiles.find(
+        (f) => String(f.id) === String(parentId),
+      );
+      if (!parentFolder) this.throwError("Folder not found", 404);
+
+      // Verify access to the parent folder
+      const access =
+        String(parentFolder.ownerId) === String(userId) ||
+        (await this._hasPermission(parentFolder, userId));
+
+      if (!access) this.throwError("Access Denied", 403);
+
+      // Filter children ONLY by parentId.
+      // Do NOT apply the 'ownerId == userId' filter here, otherwise shared files disappear.
+      return allFiles.filter(
+        (f) =>
+          String(f.parentId || "") === String(parentId) &&
+          f.isDeleted === false,
+      );
+    }
+
+    // CASE: Root views (My Drive, Starred, Trash)
+    const userFiles = allFiles.filter(
+      (file) => String(file.ownerId) === String(userId),
+    );
 
     if (isTrash) return this._getTrashFiles(userFiles);
     if (isRecent) return this._getRecentFiles(userFiles);
     if (isStarred) return this._getStarredFiles(userFiles);
-    // default: get files in the specified folder
-    return this._getFolderFiles(userFiles, parentId);
+
+    return this._getFolderFiles(userFiles, null);
   }
   // helper to get trashed files
   _getTrashFiles(files) {
-    return files.filter((f) => f.isDeleted === true);
+    return files.filter((f) => f.isDeleted == true);
   }
   // helper to get starred files
   _getStarredFiles(files) {
-    return files.filter((f) => f.isStarred === true && f.isDeleted === false);
+    return files.filter((f) => f.isStarred == true && f.isDeleted == false);
   }
   // helper to get recent files
   _getRecentFiles(files) {
-    const activeFiles = files.filter((f) => f.isDeleted === false);
+    const activeFiles = files.filter((f) => f.isDeleted == false);
     return activeFiles.sort((a, b) => {
       const timeA = new Date(a.lastAccessed || a.created).getTime();
       const timeB = new Date(b.lastAccessed || b.created).getTime();
@@ -231,7 +256,7 @@ class LogicCommandsService {
     if (isHaveAccess) {
       const response = await this._handleGatewayRequest(
         this.fileGateway.get(id),
-        "200"
+        "200",
       );
       let content = null;
       let image = null;
@@ -258,7 +283,7 @@ class LogicCommandsService {
     if (type == "file") {
       await this._handleGatewayRequest(
         this.fileGateway.post(fileID, contentToSave),
-        "201"
+        "201",
       );
     }
     // get current timestamp
@@ -310,7 +335,7 @@ class LogicCommandsService {
       await this._handleGatewayRequest(this.fileGateway.delete(id), "204");
       await this._handleGatewayRequest(
         this.fileGateway.post(id, contentToSave),
-        "201"
+        "201",
       );
       file.size = contentToSave.length;
     }
@@ -420,7 +445,7 @@ class LogicCommandsService {
     try {
       const response = await this._handleGatewayRequest(
         this.fileGateway.search(query),
-        "200"
+        "200",
       );
       const content = response.content;
       if (content && content.length > 0) {

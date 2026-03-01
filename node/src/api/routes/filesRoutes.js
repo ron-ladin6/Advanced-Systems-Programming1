@@ -4,6 +4,7 @@ const filesController = require("../../controllers/filesController");
 router.get("/files/shared", filesController.getSharedFiles);
 router.get("/files", filesController.getFiles);
 router.post("/files", filesController.createFile);
+router.get("/files/:id/download", filesController.downloadFile);
 router.get("/files/:id", filesController.getFileById);
 router.patch("/files/:id", filesController.updateFile);
 router.delete("/files/:id", filesController.deleteFile);

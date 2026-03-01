@@ -1,158 +1,116 @@
-# Advanced-Programming-Project – Exercise 4
-https://github.com/Advanced-Programming-Project-Ron-Dan/Advanced-Programming-Project--ex4
+# Advanced-Programming-Project – Exercise 5
+https://github.com/Advanced-Programming-Project-Ron-Dan/Advanced-Programming-Project-ex5
 
-This project is a full system that includes a **React client** + a **Node.js REST API server** (MVC style),
-which acts as a web wrapper for the **C++ TCP file-storage server from Exercise 2**.
+This project is a complete file storage system featuring a **React Native (Expo) mobile client** and a **Node.js REST API server** (MVC architecture).         
+The Node.js server acts as a wrapper for the **C++ TCP file-storage server (from Exercise 2)**, managing data persistence via **MongoDB**.      
+The mobile UI is designed with inspiration from **Google Drive**, offering a clean interface with a side menu, file list, and floating action button for easy management.   
 
----
-
-## System components
-- **ex2 (C++ TCP Server)** – Stores file content and supports content search via TCP.
-- **web (Node.js / Express API)** – Exposes REST endpoints for users and files and communicates with the TCP server.
-- **client (React)** – UI for register/login and file management.
-
----
-
-## Main features
-- **User Authentication:** Register + Login (JWT token).
-- **File Management:** Create, Read, Update, Delete files and folders (delete to Trash + permanent delete from Trash).
-- **File Actions:** Rename files and folders, edit text files, replace file content, replace images.
-- **Views:** My Files, Recent, Starred, Trash, Shared.
-- **Permissions (Sharing):** Share files with other users (**viewer** role).
-- **Search:** Search by file name (Node side) and by content (delegated to the C++ server).
-- **Theme:** Clicking the **sun/moon** icon toggles **Light mode / Dark mode**.
-- **Upload limit:** Maximum file size is **up to 100MB**.
+## System Components
+- **C++ TCP Server** – Responsible for low-level file content storage and content search via TCP.
+- **node (Node.js / Express API)** – The main backend. Exposes REST endpoints for the mobile app, manages users/metadata in MongoDB, and communicates with the C++ server.
+- **mongo (MongoDB)** – Database for storing user data, file metadata, and directory structure.
+- **mobile (React Native / Expo)** – The frontend client. A native mobile app for Android/iOS allowing users to register, login, and manage their files.
 
 ---
 
-## Project structure (high level)
-- **client/** – React application (UI).
-- **web/** – Express API (Routes + Services + Gateways).
-- **ex2/** – C++ TCP file-storage server.
+## Main Features
+- **User Authentication:** Register and Login using JWT tokens. Includes input validation and profile image selection (Gallery/Camera).
+- **File Management:** Browse folders recursively, Create folders, and Upload files (Images/Text).
+- **File Viewer:**
+- **Images:** Full-screen viewing.
+- **Text:** View and Edit content directly in the app.
+- **Views:** My Drive (Root), Recent, Starred, Trash, Shared.
+- **Actions:** Rename, Delete (Soft delete), Restore, Delete Forever, Star/Unstar.
+- **Sharing:** Share files with other users (Viewer role permissions).
+- **Search:** Filter files by name using the top search bar.
+- **UI/UX:** Side navigation menu, "Three-dots" context menu for items, and a "Plus" button for creation actions.
 
 ---
 
-## Running the project (required flow)
+## Project Structure (High Level)
+- **mobile/** – React Native Expo application (Screens, Components, Context, API hooks).
+- **node/** – Express API server (Routes, Controllers, Services, Gateways).
+- **ex2-3/** – C++ TCP server source code.
+- **docker-compose.yml** – Orchestration for backend services.
 
-### 0. Requirements
-- Docker Desktop installed and running.
-- Node.js is only needed if you want to run the client locally without Docker.
+## Running the Project
 
-### 1. Start servers using Docker Compose
+### 0. Prerequisites
+- **Docker Desktop** installed and running.
+- **Node.js** installed (to run the mobile app via Expo).
+- **Expo Go** app on your phone (or an Android/iOS Simulator).
+
+### 1. Start Backend Services
 Open a terminal in the project root folder and run:
 
 docker-compose up --build
 
 What this does:
-Builds and runs the C++ TCP server on port 8080 (internal Docker network).
-Builds the Node.js server, exposing port 5000. It connects to ex2 via the internal hostname ex2.
-frontend: Builds the React app and serves it on port 3000.
+Starts MongoDB.      
+Builds and runs the C++ TCP Server.         
+Builds and runs the Node.js API (web), connected to Mongo and the C++ server.      
+To stop the services, run: 
 
-### 2. Open your browser and navigate to:
-http://localhost:3000
-
-### 3. Stopping the Server
 docker-compose down
 
-# How to use the UI (React client)
-## Navigation basics
-Folders are opened by clicking the folder item in the list.
-Actions such as Upload, New Folder, and Move Here always apply to the current folder you are inside.
-Use the breadcrumbs at the top to jump back to previous folders.
+### 2. Run the Mobile App
+Open a new terminal window:
 
-## Home page (My Files)
-This page shows your files and folders in the current directory.
+cd mobile
+npm install
+npx expo start
 
-#### Top icons:
-- ★ / ☆ – Star / Unstar the item.
-- 📁 – Folder
-- 🖼️ – Image file
-- 📕 – PDF file
-- 📝 – Text file
-#### Other hover(mouse over) actions:
-- ↔ – Move
-- ⤴ – Share
-- ✎ – Edit
-- ✏️ – Rename (files & folders)
-- 🗑 – Delete *(moves item to Trash)*
-- ↩ – Restore
-- 🗑(in red) Delete Forever
+⚠️ Important: Connecting to the API (Network Configuration)
+Since the app runs on a mobile device/emulator, it cannot access localhost directly.
+Android Emulator: The API URL is usually http://10.0.2.2:5000.
+Real Device (LAN): Use your PC's local IP address (e.g., http://192.168.1.15:5000).
+Make sure to update the API_BASE URL in: mobile/api/config.js (or the relevant config file) before running the app.
 
-### Create folder
-1.Click New Folder
-2.Enter a folder name and confirm
+# How to Use the App
+## Navigation Basics
+-Tap a folder to open it.
+-Tap a file to view it (Image) or edit it (Text).      
+-Back Arrow: Return to the previous screen.
 
-### Rename(you can in edit page and also in homepage)
-1.Mouse over the item card
-2.Click the ✏️ Rename button
-3.Enter the new name and confirm
+## Side Menu: Navigate between My Drive, Recent, Starred, Trash, and Shared.
 
-### Upload file
-1.Click Upload File
-2.Choose any file (images are supported)
-3.The file will be uploaded to the current folder
+## My Drive (Home)
+-Shows your files and folders.     
+-Search: Type in the top bar to filter items by name.      
+-Create Folder: Tap the + button -> "Create Folder".          
+-Upload: Tap the + button -> "Upload" -> Pick an image or text file.
 
-*Note: Max upload size is 100MB.*
+## File Actions (Three-Dots Menu)
+-Tap the three dots (⋮) on any item to open the menu:    
+-Download: Opens the download link in the device browser / system downloader.        
+-Rename: Change the file/folder name (extensions are protected).          
+-Star: Add/Remove from the "Starred" view.    
+-Share: Grant access to another user (enter their username).        
+-Delete: Move to Trash.
 
-### Open folder
-1.Click a folder to enter it
-2.Use the breadcrumbs at the top to go back to parent folders
+## File Viewer & Editor
+-Images: View full screen. Owner can replace the image content.     
+-Text Files: Owner can edit the text and click Save. Viewer is read-only.
 
-### Moving files between folders
-1.Navigate to the folder that currently contains the file
-2.Click Move on the file you want to move
-3.A banner will appear indicating the selected file
-4.Navigate to the destination folder
-5.Click Confirm - Move Here to complete the move
-6.Click Cancel to stop the move
-
-### Star / Unstar
-1.Click the star action to toggle Starred state.
-2.Starred files appear in the Starred view.
-
-### Sharing a file
-1.Click Share on a file
-2.Enter the username of another user (not an ID and not display name)
-3.Click Share
-
-The Shared page shows files that were shared with the current user.
-The file will appear in the other user's Shared view.
-
-### Delete / Restore / Delete Forever
-1.Clicking Delete moves the item to Trash.
-2.In Trash, you can Restore items back to My Files.
-3.Delete Forever is available only in the Trash view and permanently removes the file.
-
-## File page (view / edit)
-### Rename a file
-1.Edit the file name in the name input
-2.Click Save Name
-
-### Edit a text file
-1.Change the content in the text area
-2.Click Save Changes
-3.After saving, the page navigates back automatically
-
-### Replace a text file
-1.Click Replace File
-2.Pick a .txt file
-3.The file content will be replaced
-
-*Note: Max upload size is 100MB.*
-
-### Replace an image
-1.For image files, click Replace Image
-2.Pick an image file
-3.The image will be replaced
-
-*Note: Max upload size is 100MB.*
+## Trash & Recovery
+-Trash View: Shows deleted items.  
+-Restore: Returns the item to its original folder.    
+-Delete Forever: Permanently removes the file from the system.
 
 ### How it should look:
 #### 1:
-![example1](screenshots/example1.png)
+![MyDrivePage](screenshots/MyDrivePage.jpeg)
 #### 2:
-![example2](screenshots/example2.png)
+![PhotoReplaceDownload](screenshots/PhotoReplaceDownload.jpeg)
 #### 3:
-![example3](screenshots/example3.png)
+![Search](screenshots/Search.jpeg)
 #### 4:
+![DeleteRestoreTrash](screenshots/DeleteRestoreTrash.jpeg)
+#### 5:
+![example1](screenshots/example1.png)
+#### 6:
+![example2](screenshots/example2.png)
+#### 7:
+![example3](screenshots/example3.png)
+#### 8:
 ![example4](screenshots/example4.png)

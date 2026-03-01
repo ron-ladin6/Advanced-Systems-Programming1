@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { StyleSheet, Alert, View } from "react-native"; // Added View just in case
+import ThreeDotsMenu from "../../components/ThreeDotsMenu";
+import RenameModal from "../../components/RenameModal";
+import ShareModal from "../../components/ShareModal";
+import { API_BASE } from "../../api/config";
+import { Linking } from "react-native";
+import { StyleSheet, Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import PlusBtnMenu from "../../components/PlusBtnMenu";
@@ -10,7 +15,7 @@ import { useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { http } from "../../api/http";
-import * as DocumentPicker from "expo-document-picker";
+import { useFileActions } from "../../Hooks/FileFuncs";
 
 export default function FolderScreen() {
   const router = useRouter();
@@ -21,6 +26,11 @@ export default function FolderScreen() {
   const folderId = String(id || "").trim();
   const [files, setFiles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [renameVisible, setRenameVisible] = useState(false);
+  const [renameInitial, setRenameInitial] = useState("");
+  const [shareVisible, setShareVisible] = useState(false);
 
   const fetchFiles = useCallback(async () => {
     if (!token || !id) return;
@@ -43,6 +53,9 @@ export default function FolderScreen() {
     }
   }, [token, id, logout, router]);
 
+  const { handleUpload, handleToggleStar, handleDelete, handleRename, handleShare } =
+  useFileActions(token, fetchFiles, setRefreshing);
+
   // Initial fetch when entering the screen
   useEffect(() => {
     fetchFiles();
@@ -54,47 +67,51 @@ export default function FolderScreen() {
     }, [fetchFiles])
   );
 
-  const blobToBase64 = (blob) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => resolve(reader.result);
-      reader.readAsDataURL(blob);
-    });
+  const handleFileMenu = (file) => {
+  setSelectedFile(file);
+  setMenuVisible(true);
+};
 
-  const handleUploadInFolder = async () => {
+  const renameFile = (file) => {
+    setSelectedFile(file);
+    setRenameInitial(file?.name || "");
+    setRenameVisible(true);
+  };
+
+  const onMenuAction = async (actionId, file) => {
+    const fileId = file?.id || file?._id;
+    if (!fileId) return;
+
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "text/*"],
-        copyToCacheDirectory: true,
-      });
+      if (actionId === "download") {
+        const url = `${API_BASE}/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+        await Linking.openURL(url);
+        return;
+      }
 
-      if (result.canceled) return;
-      const file = result.assets[0];
+      if (actionId === "toggle_star") {
+        await handleToggleStar(file);
+        return;
+      }
 
-      //read file from local uri and convert to blob
-      const localRes = await fetch(file.uri);
-      const blob = await localRes.blob();
-      //convert blob to base64 string
-      const base64Content = await blobToBase64(blob);
+      if (actionId === "delete") {
+        await handleDelete(fileId);
+        return;
+      }
 
-      //post file to server with parent folder id
-      await http.post(
-        "/files",
-        {
-          fileName: file.name,
-          type: "file",
-          parentId: folderId, //make sure folderId is available from params
-          content: base64Content,
-        },
-        { token }
-      );
+      if (actionId === "rename") {
+        setMenuVisible(false);
+        renameFile(file);
+        return;
+      }
 
-      Alert.alert("Success", "File uploaded successfully");
-      //refresh the list
-      fetchFiles(); 
+      if (actionId === "share") {
+        setMenuVisible(false);
+        setShareVisible(true);
+        return;
+      }
     } catch (e) {
-      Alert.alert("Error", e?.message || "Upload failed");
+      Alert.alert("Error", e?.message || "Action failed");
     }
   };
 
@@ -143,19 +160,53 @@ export default function FolderScreen() {
       <FileList
         files={files}
         onFilePress={handleFilePress}
+        onFileMenu={handleFileMenu}
         refreshing={refreshing}
         onRefresh={fetchFiles}
       />
-
+    <View style={styles.fabWrap}>
       <PlusBtnMenu
         currentFolder={folderId}
         onPressCreateFolder={() =>
           router.push({
-            pathname: "/(tabs)/create",
-            params: { parentId: folderId },
-          })
+          pathname: "/(tabs)/create",
+          params: { parentId: folderId, returnToId: folderId, returnToName: name || "Folder" },
+        })
         }
-        onPressUpload={handleUploadInFolder}
+        onPressUpload={() => handleUpload(folderId)}
+      />
+      </View>
+      <RenameModal
+        visible={renameVisible}
+        initialValue={renameInitial}
+        onClose={() => setRenameVisible(false)}
+        onSave={async (nextName) => {
+          const file = selectedFile;
+          const fileId = file?.id || file?._id;
+          if (!fileId) return;
+          const next = String(nextName || "").trim();
+          if (!next) {
+            Alert.alert("Invalid", "Name is required.");
+            return;
+          }
+          const isFolder = file?.isFolder || file?.type === "folder";
+          await handleRename(fileId, next, file?.name || "", isFolder);
+          setRenameVisible(false);
+        }}
+      />
+      <ThreeDotsMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        file={selectedFile}
+        onAction={onMenuAction}
+        isTrashMode={false}
+      />
+      <ShareModal
+        visible={shareVisible}
+        onClose={() => setShareVisible(false)}
+        onSubmit={(username) =>
+          handleShare(selectedFile?.id || selectedFile?._id, username)
+        }
       />
     </SafeAreaView>
   );
@@ -163,4 +214,9 @@ export default function FolderScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  fabWrap: {
+    position: "absolute",
+    right: 18,
+    bottom: 80,
+  },
 });

@@ -1,33 +1,31 @@
 const jwt = require("jsonwebtoken");
 
 const authHeader = (req, res, next) => {
-  console.log("DEBUG AUTH: Checking Authorization Header...");
-  // Expecting header to be in token format
-  const authHeader = req.headers["authorization"];
-  if (!authHeader) {
-    console.error("DEBUG AUTH ERROR: No Authorization header provided");
+  //Authorization: Bearer <token>
+  const header = req.headers["authorization"];
+  let token = null;
+
+  if (typeof header === "string" && header.startsWith("Bearer ")) {
+    token = header.slice(7).trim();
+  }
+
+  //fallback
+  if (!token && typeof req.query?.token === "string") {
+    token = req.query.token.trim();
+  }
+  if (!token) {
     return res.status(401).json({ error: "No token provided" });
   }
-  // Extract token from header
-  const token = authHeader.split(" ")[1];
-  if (!token) {
-    console.error("DEBUG AUTH ERROR: Malformed token header");
-    return res.status(401).json({ error: "Malformed token" });
-  }
-  //verify token
+
   const secret = process.env.JWT_SECRET || "MySecretKeyForHomework123";
-  jwt.verify(token, secret, (err, decoded) => {
-    if (err) {
-      console.error(
-        "DEBUG AUTH ERROR: Token verification failed:",
-        err.message
-      );
-      return res.status(403).json({ error: "Invalid token" });
-    }
-    console.log(`DEBUG AUTH: Success! User ID: ${decoded.userId}`);
+  //verify token
+  try {
+    const decoded = jwt.verify(token, secret);
     req.userId = String(decoded.userId);
-    next();
-  });
+    return next();
+  } catch (e) {
+    return res.status(403).json({ error: "Invalid token" });
+  }
 };
 
 module.exports = authHeader;

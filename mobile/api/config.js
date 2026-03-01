@@ -1,12 +1,14 @@
-//configuration for the API connection
-import { Platform } from "react-native";
-import * as Device from "expo-device";
+import Constants from 'expo-constants';
 
-const LAN_IP = "172.16.22.26";
+//the port defined in docker-compose for the 'web' service
+const PORT = '5000';
 
-const isAndroidEmulator =
-  Platform.OS === "android" && !Device.isDevice;
+//dynamically retrieve the host IP
+const debuggerHost = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost;
 
-export const API_BASE = isAndroidEmulator
-  ? "http://10.0.2.2:5000/api"
-  : `http://${LAN_IP}:5000/api`;
+const LAN_IP = debuggerHost
+  ? debuggerHost.split(':').shift()
+  : 'localhost';
+
+//construct the API URL
+export const API_BASE = `http://${LAN_IP}:${PORT}/api`;

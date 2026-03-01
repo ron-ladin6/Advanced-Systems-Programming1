@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { StyleSheet, Alert } from "react-native";
+import { StyleSheet, Alert, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useFocusEffect } from "expo-router";
-import * as DocumentPicker from "expo-document-picker";
 import TopBar from "../components/TopBar";
 import FileList from "../components/FileList";
 import PlusBtnMenu from "../components/PlusBtnMenu";
-import { useAuth } from "../context/AuthContext";
-import { useTheme } from "../context/ThemeContext";
-import { http } from "../api/http";
-import { API_BASE } from "../api/config";
 import ThreeDotsMenu from "../components/ThreeDotsMenu";
 import RenameModal from "../components/RenameModal";
 import SideMenu from "../components/SideMenu";
 import ShareModal from "../components/ShareModal";
+import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
+import { http } from "../api/http";
+import { API_BASE } from "../api/config";
 import { useFileActions } from "../Hooks/FileFuncs";
 
 export default function Home() {
@@ -48,8 +47,9 @@ export default function Home() {
       setRefreshing(false);
     }
   }, [token, debouncedQuery]); //execute the func only if the token change
-  const { handleShare } = useFileActions(token, fetchFiles, null);
-  // Initial load
+  const { handleShare, handleUpload, handleToggleStar, handleDelete, handleRename } =
+  useFileActions(token, fetchFiles, setRefreshing);
+  //initial load
   useEffect(() => {
     const t = setTimeout(() => {
       setDebouncedQuery(String(searchQuery || "").trim());
@@ -62,7 +62,7 @@ export default function Home() {
     setMenuVisible(true);
   };
 
-  // Reload when screen gets focus (e.g. coming back from Create folder)
+  //reload when screen gets focus (e.g. coming back from Create folder)
   useFocusEffect(
     useCallback(() => {
       fetchFiles();
@@ -86,26 +86,19 @@ export default function Home() {
     try {
       if (actionId === "download") {
         //simulating download by opening the file viewer
-        handleFilePress(file);
+        const url = `${API_BASE}/files/${fileId}/download?token=${encodeURIComponent(token)}`;
+        const can = await Linking.canOpenURL(url);
+        await Linking.openURL(url);
         return;
       }
 
       if (actionId === "toggle_star") {
-        const nextStar = !file.isStarred;
-        //update star status on server
-        await http.patch(
-          `/files/${fileId}`,
-          { isStarred: nextStar },
-          { token }
-        );
-        await fetchFiles();
+        await handleToggleStar(file);
         return;
       }
 
       if (actionId === "delete") {
-        //soft delete the file by updating the flag
-        await http.patch(`/files/${fileId}`, { isDeleted: true }, { token });
-        await fetchFiles();
+        await handleDelete(fileId);
         return;
       }
 
@@ -121,70 +114,6 @@ export default function Home() {
       }
     } catch (e) {
       Alert.alert("Error", e?.message || "Action failed");
-    }
-  };
-  // Convert Blob to Base64
-  const blobToBase64 = (blob) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = reject;
-      reader.onload = () => {
-        // Returns a string like: "data:image/jpeg;base64,..."
-        resolve(reader.result);
-      };
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  const handleUpload = async () => {
-    try {
-      //Pick a file from the device
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["image/*", "text/*"],
-        copyToCacheDirectory: true,
-      });
-
-      if (result.canceled) return;
-      const file = result.assets[0];
-
-      setRefreshing(true);
-
-      //Read local file as Blob and convert to Base64
-      // We use 'fetch' to read the local URI provided by the picker
-      const localResponse = await fetch(file.uri);
-      const blob = await localResponse.blob();
-      const base64Content = await blobToBase64(blob);
-
-      // We send the file content as a string inside the JSON body
-      const payload = {
-        fileName: file.name,
-        type: "file",
-        parentId: null, // Or use the current folder ID if available
-        content: base64Content, // This contains the full Base64 string
-      };
-
-      //Send to Node.js Server
-      const response = await fetch(`${API_BASE}/files`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Upload failed");
-      }
-
-      Alert.alert("Success", "File uploaded successfully");
-      await fetchFiles();
-    } catch (err) {
-      console.error("Upload error:", err);
-      Alert.alert("Upload Error", err.message || "Something went wrong");
-    } finally {
-      setRefreshing(false);
     }
   };
 
@@ -241,29 +170,23 @@ export default function Home() {
         initialValue={renameInitial}
         onClose={() => setRenameVisible(false)}
         onSave={async (nextName) => {
-          const fileId = selectedFile?.id || selectedFile?._id;
-
+          const file = selectedFile;
+          const fileId = file?.id || file?._id;
+          if (!fileId) 
+              return;
           const next = String(nextName || "").trim();
-          if (!fileId) return;
           if (!next) {
             Alert.alert("Invalid", "Name is required.");
             return;
           }
           //check if name actually changed
-          if (next === (selectedFile?.name || "")) {
+          if (next === (file?.name || "")) {
             setRenameVisible(false);
             return;
           }
-
-          try {
-            //send patch request to server
-            await http.patch(`/files/${fileId}`, { name: next }, { token });
-            setRenameVisible(false);
-            //refresh file list
-            await fetchFiles();
-          } catch (e) {
-            Alert.alert("Error", e?.message || "Rename failed");
-          }
+          const isFolder = file?.isFolder || file?.type === "folder";
+          await handleRename(fileId, next, file?.name || "", isFolder);
+          setRenameVisible(false);
         }}
       />
 
@@ -279,7 +202,7 @@ export default function Home() {
       <PlusBtnMenu
         currentFolder={null}
         onPressCreateFolder={() => router.push("/(tabs)/create")}
-        onPressUpload={handleUpload}
+        onPressUpload={() => handleUpload(null)}
       />
       <ThreeDotsMenu
         visible={menuVisible}

@@ -2,7 +2,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "expo": "^54.0.31",
+    "expo": "^54.0.32",
     "mongoose": "^9.1.3"
   }
 }
