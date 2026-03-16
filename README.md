@@ -96,7 +96,7 @@ Make sure to update the API_BASE URL in: mobile/api/config.js (or the relevant c
 -Trash View: Shows deleted items.  
 -Restore: Returns the item to its original folder.    
 -Delete Forever: Permanently removes the file from the system.
-
+* FOR MORE PICTURES GO TO THE WIKI FOLDER.
 ### How it should look:
 #### 1:
 ![MyDrivePage](screenshots/MyDrivePage.jpeg)
